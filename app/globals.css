@@ -1,0 +1,92 @@
+/* ===== Fonty (osadzone z fonts.css — pełne polskie znaki) ===== */
+:root {
+  --font-fredoka: "Baloo 2", system-ui, sans-serif; /* nagłówki (Baloo 2 ma polskie znaki) */
+  --font-nunito: "Nunito", system-ui, sans-serif;
+}
+
+/* ===== Reset / baza ===== */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-nunito);
+  color: #1b3a4b;
+  background: #f4fafe;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+img { max-width: 100%; }
+
+/* Klasy pomocnicze fontów */
+.font-fredoka { font-family: var(--font-fredoka); }
+.font-nunito { font-family: var(--font-nunito); }
+
+/* ===== Animacje (z designu) ===== */
+@keyframes asrise {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  12% { opacity: .7; }
+  90% { opacity: .5; }
+  100% { transform: translateY(-360px) scale(1.15); opacity: 0; }
+}
+@keyframes aswave { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes asbob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes asfloat { 0%, 100% { transform: translateY(0) rotate(-1.2deg); } 50% { transform: translateY(-26px) rotate(1.2deg); } }
+@keyframes asfloat2 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(14px); } }
+@keyframes asglow { 0%, 100% { transform: scale(1); opacity: .55; } 50% { transform: scale(1.12); opacity: .85; } }
+@keyframes asorbit { 0%, 100% { transform: translateY(0) translateX(0); } 50% { transform: translateY(-16px) translateX(6px); } }
+@keyframes asshine { 0%, 100% { opacity: .5; } 50% { opacity: .95; } }
+
+/* ===== Odsłanianie sekcji — CSS-only (zawsze kończy się widoczne) ===== */
+.as-reveal {
+  animation: as-reveal-in 0.7s ease both;
+}
+@keyframes as-reveal-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .as-reveal { animation: none; }
+}
+
+/* ===== Stany interaktywne (hover/focus) ===== */
+.as-btn-primary { transition: transform .15s, box-shadow .15s; }
+.as-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(233,161,59,0.45); }
+.as-btn-primary-lg { transition: transform .15s, box-shadow .15s; }
+.as-btn-primary-lg:hover { transform: translateY(-3px); box-shadow: 0 16px 30px rgba(233,161,59,0.5); }
+
+.as-btn-secondary { transition: background .15s, transform .15s; }
+.as-btn-secondary:hover { background: #e8f4fb; transform: translateY(-2px); }
+.as-btn-ghost { transition: background .15s, transform .15s; }
+.as-btn-ghost:hover { background: rgba(255,255,255,0.2); transform: translateY(-3px); }
+.as-btn-white { transition: transform .15s; }
+.as-btn-white:hover { transform: translateY(-2px); }
+
+.as-nav-link { transition: background .15s, color .15s; }
+.as-nav-link:hover { background: #e8f4fb; color: #0f5b8f; }
+
+.as-price-card { transition: transform .2s, box-shadow .2s; }
+.as-price-card:hover { transform: translateY(-6px); box-shadow: 0 22px 44px rgba(15,91,143,0.16); }
+
+.as-gallery-item { transition: transform .2s; }
+.as-gallery-item:hover { transform: scale(1.02); }
+
+.as-row:hover { background: #f4fafe; }
+
+.as-input { transition: border-color .15s; }
+.as-input:focus { border-color: #6cb4e0; outline: none; }
+
+.as-foot-link { transition: color .15s; }
+.as-foot-link:hover { color: #fff; }
+.as-social { transition: background .15s; }
+.as-social:hover { background: #e9a13b; }
+
+.as-pill { transition: all .15s; cursor: pointer; }
+
+/* ===== Responsywność (z designu) ===== */
+@media (max-width: 900px) {
+  .as-nav-links { display: none !important; }
+  .as-burger { display: inline-flex !important; }
+  .as-hero-grid { grid-template-columns: 1fr !important; }
+  .as-hero-bubble { margin: 10px auto 0 !important; }
+  .as-login-desktop { display: none !important; }
+}

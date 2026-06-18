@@ -1,0 +1,31 @@
+# zależności
+/node_modules
+
+# build Next.js
+/.next/
+/out/
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# środowisko / SEKRETY (nie wrzucać!)
+.env
+.env.local
+.env*.local
+
+# Convex (lokalny stan)
+.convex/
+
+# logi
+*.log
+npm-debug.log*
+
+# system / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# pliki tymczasowe
+*.tmp
+keys.tmp.json

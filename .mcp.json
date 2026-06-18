@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "convex": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "convex@latest",
+        "mcp",
+        "start",
+        "--project-dir",
+        "C:\\Users\\bartl\\Desktop\\allswim"
+      ]
+    }
+  }
+}

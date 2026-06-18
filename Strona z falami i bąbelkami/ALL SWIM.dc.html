@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="assets/fonts.css">
+<style>
+  *{ box-sizing:border-box; }
+  body{ margin:0; }
+  @keyframes asrise { 0%{ transform:translateY(0) scale(1); opacity:0 } 12%{ opacity:.7 } 90%{ opacity:.5 } 100%{ transform:translateY(-360px) scale(1.15); opacity:0 } }
+  @keyframes aswave { from{ transform:translateX(0) } to{ transform:translateX(-50%) } }
+  @keyframes asbob { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-8px) } }
+  @keyframes asfloat { 0%,100%{ transform:translateY(0) rotate(-1.2deg) } 50%{ transform:translateY(-26px) rotate(1.2deg) } }
+  @keyframes asfloat2 { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(14px) } }
+  @keyframes asglow { 0%,100%{ transform:scale(1); opacity:.55 } 50%{ transform:scale(1.12); opacity:.85 } }
+  @keyframes asorbit { 0%,100%{ transform:translateY(0) translateX(0) } 50%{ transform:translateY(-16px) translateX(6px) } }
+  @keyframes asshine { 0%,100%{ opacity:.5 } 50%{ opacity:.95 } }
+  @media (max-width:900px){
+    .as-nav-links{ display:none !important; }
+    .as-burger{ display:inline-flex !important; }
+    .as-hero-grid{ grid-template-columns:1fr !important; }
+    .as-hero-bubble{ margin:10px auto 0 !important; }
+  }
+</style>
+</helmet>
+<div style="font-family:'Nunito',sans-serif; color:#1b3a4b; background:#f4fafe; overflow-x:hidden;">
+
+  <!-- ============ NAV ============ -->
+  <header style="position:sticky; top:0; z-index:50; background:rgba(255,255,255,0.92); backdrop-filter:blur(10px); border-bottom:1px solid #e3eef5;">
+    <nav style="max-width:1200px; margin:0 auto; padding:12px 22px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+      <a href="#top" style="display:flex; align-items:center; gap:10px; text-decoration:none;">
+        <img src="assets/logo.png" alt="ALL SWIM" style="height:46px; width:auto; display:block;">
+      </a>
+      <div class="as-nav-links" style="display:flex; align-items:center; gap:6px;">
+        <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="8">
+          <a href="{{ n.href }}" style="text-decoration:none; color:#1b3a4b; font-weight:700; font-size:15px; padding:8px 12px; border-radius:999px; transition:background .15s, color .15s;" style-hover="background:#e8f4fb; color:#0f5b8f;">{{ n.label }}</a>
+        </sc-for>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button onClick="{{ goForm }}" style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:15px; color:#fff; background:#e9a13b; border:none; border-radius:999px; padding:11px 22px; cursor:pointer; box-shadow:0 8px 18px rgba(233,161,59,0.32); transition:transform .15s, box-shadow .15s;" style-hover="transform:translateY(-2px); box-shadow:0 12px 24px rgba(233,161,59,0.42);">Zapisz się</button>
+        <button class="as-burger" onClick="{{ toggleMobile }}" aria-label="Menu" style="display:none; align-items:center; justify-content:center; width:44px; height:44px; border-radius:14px; border:2px solid #d6e7f2; background:#fff; cursor:pointer; color:#0f5b8f; font-size:20px;">☰</button>
+      </div>
+    </nav>
+    <sc-if value="{{ mobileOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="border-top:1px solid #e3eef5; background:#fff; padding:10px 22px 16px;">
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="8">
+            <a href="{{ n.href }}" onClick="{{ closeMobile }}" style="text-decoration:none; color:#1b3a4b; font-weight:700; font-size:16px; padding:11px 12px; border-radius:12px;" style-hover="background:#e8f4fb;">{{ n.label }}</a>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+  </header>
+
+  <div id="top"></div>
+
+  <!-- ============ HERO ============ -->
+  <section style="position:relative; background:linear-gradient(170deg,#2f8fcf 0%,#0d5286 100%); color:#fff; overflow:hidden;">
+    <!-- bubbles -->
+    <div style="position:absolute; inset:0; pointer-events:none;">
+      <sc-for list="{{ bubbles }}" as="b" hint-placeholder-count="9">
+        <div style="position:absolute; left:{{ b.leftLive }}; bottom:0; width:{{ b.sizeLive }}; height:{{ b.sizeLive }}; border-radius:50%; background:{{ b.colorLive }}; animation:asrise {{ b.durLive }} ease-in infinite; animation-delay:{{ b.delayLive }};"></div>
+      </sc-for>
+    </div>
+
+    <div class="as-hero-grid" style="position:relative; z-index:2; max-width:1120px; margin:0 auto; padding:84px 22px 150px; display:grid; grid-template-columns:1.08fr 0.92fr; gap:40px; align-items:center;">
+      <div>
+        <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.32); border-radius:999px; padding:7px 15px; font-weight:700; font-size:14px; color:#ffd27a;">📍 Tczew · nauka pływania dla dzieci</div>
+        <h1 style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:clamp(38px,5.5vw,62px); line-height:1.05; margin:18px 0 0; max-width:820px; text-shadow:0 2px 12px rgba(8,50,80,0.28);">Pierwszy ruch w wodzie<br>zostaje na całe życie</h1>
+        <p style="font-size:clamp(17px,2.2vw,21px); line-height:1.55; color:#f2faff; max-width:580px; margin:20px 0 0; text-shadow:0 1px 5px rgba(8,50,80,0.32);">Cierpliwa, bezpieczna nauka pływania dla dzieci. Oswajamy się z wodą, przełamujemy lęki i uczymy się pływać — z uśmiechem.</p>
+        <div style="display:flex; flex-wrap:wrap; gap:14px; margin-top:30px;">
+          <button onClick="{{ goForm }}" style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:17px; color:#fff; background:#e9a13b; border:none; border-radius:999px; padding:15px 30px; cursor:pointer; box-shadow:0 10px 24px rgba(233,161,59,0.4); transition:transform .15s, box-shadow .15s;" style-hover="transform:translateY(-3px); box-shadow:0 16px 30px rgba(233,161,59,0.5);">Zapisz dziecko</button>
+          <button onClick="{{ goSchedule }}" style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:17px; color:#fff; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.55); border-radius:999px; padding:13px 28px; cursor:pointer; transition:background .15s, transform .15s;" style-hover="background:rgba(255,255,255,0.2); transform:translateY(-3px);">Zobacz grafik</button>
+        </div>
+        <div style="display:flex; gap:38px; margin-top:38px; flex-wrap:wrap;">
+          <div><div style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:30px; color:#ffd27a;">do 6</div><div style="font-size:14px; color:#f2faff;">dzieci w grupie</div></div>
+          <div><div style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:30px; color:#ffd27a;">2 baseny</div><div style="font-size:14px; color:#f2faff;">w Tczewie</div></div>
+        </div>
+      </div>
+
+      <!-- floating logo bubble -->
+      <div class="as-hero-bubble" style="position:relative; width:min(420px,90vw); aspect-ratio:1; margin:0 auto;">
+        <!-- glow halo -->
+        <div style="position:absolute; inset:-6%; border-radius:50%; background:radial-gradient(circle at 50% 45%, rgba(255,210,122,0.45), rgba(108,180,224,0.25) 55%, transparent 72%); filter:blur(8px); animation:asglow 6s ease-in-out infinite;"></div>
+        <!-- orbiting small bubbles -->
+        <div style="position:absolute; top:6%; left:2%; width:46px; height:46px; border-radius:50%; background:radial-gradient(circle at 32% 28%, rgba(255,255,255,0.9), rgba(168,212,239,0.5) 60%, rgba(108,180,224,0.25)); box-shadow:inset -4px -6px 10px rgba(13,82,134,0.25); animation:asorbit 7s ease-in-out infinite;"></div>
+        <div style="position:absolute; bottom:8%; right:0%; width:34px; height:34px; border-radius:50%; background:radial-gradient(circle at 32% 28%, rgba(255,255,255,0.9), rgba(168,212,239,0.5) 60%, rgba(108,180,224,0.25)); box-shadow:inset -3px -5px 8px rgba(13,82,134,0.25); animation:asorbit 5.5s ease-in-out infinite 0.6s;"></div>
+        <div style="position:absolute; top:14%; right:8%; width:20px; height:20px; border-radius:50%; background:radial-gradient(circle at 32% 28%, rgba(255,255,255,0.95), rgba(255,210,122,0.5) 70%); animation:asorbit 6.2s ease-in-out infinite 1.1s;"></div>
+        <!-- main bubble -->
+        <div style="position:absolute; inset:8%; border-radius:50%; animation:asfloat 7s ease-in-out infinite;">
+          <div style="position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 36% 30%, rgba(255,255,255,0.92) 0%, rgba(232,244,251,0.5) 26%, rgba(108,180,224,0.42) 60%, rgba(15,91,143,0.32) 100%); box-shadow:0 30px 60px rgba(8,50,80,0.4), inset -18px -22px 50px rgba(13,82,134,0.4), inset 14px 16px 40px rgba(255,255,255,0.55); border:1px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center;">
+            <img src="assets/logo.png" alt="ALL SWIM" style="width:62%; height:auto; display:block; filter:drop-shadow(0 6px 14px rgba(8,50,80,0.35));">
+          </div>
+          <!-- specular highlight -->
+          <div style="position:absolute; top:12%; left:18%; width:30%; height:22%; border-radius:50%; background:radial-gradient(circle at 40% 40%, rgba(255,255,255,0.95), transparent 70%); filter:blur(2px); animation:asshine 5s ease-in-out infinite;"></div>
+          <div style="position:absolute; bottom:16%; right:20%; width:12%; height:10%; border-radius:50%; background:rgba(255,255,255,0.6); filter:blur(1px);"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- wave divider -->
+    <div style="position:absolute; left:0; right:0; bottom:-1px; line-height:0;">
+      <div style="position:relative; width:200%; height:90px; animation:aswave 14s linear infinite; opacity:0.5;">
+        <svg viewBox="0 0 1440 90" preserveAspectRatio="none" style="width:50%; height:100%; float:left;"><path d="M0,45 C240,90 480,5 720,40 C960,75 1200,10 1440,45 L1440,90 L0,90 Z" fill="#6cb4e0"/></svg>
+        <svg viewBox="0 0 1440 90" preserveAspectRatio="none" style="width:50%; height:100%; float:left;"><path d="M0,45 C240,90 480,5 720,40 C960,75 1200,10 1440,45 L1440,90 L0,90 Z" fill="#6cb4e0"/></svg>
+      </div>
+      <div style="position:absolute; left:0; bottom:0; width:200%; height:60px; animation:aswave 9s linear infinite;">
+        <svg viewBox="0 0 1440 60" preserveAspectRatio="none" style="width:50%; height:100%; float:left;"><path d="M0,30 C360,60 720,5 1080,30 C1260,42 1380,16 1440,30 L1440,60 L0,60 Z" fill="#f4fafe"/></svg>
+        <svg viewBox="0 0 1440 60" preserveAspectRatio="none" style="width:50%; height:100%; float:left;"><path d="M0,30 C360,60 720,5 1080,30 C1260,42 1380,16 1440,30 L1440,60 L0,60 Z" fill="#f4fafe"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NABÓR BANNER ============ -->
+  <section style="max-width:1200px; margin:0 auto; padding:0 22px;">
+    <div data-reveal style="margin-top:-18px;">
+      <sc-if value="{{ naborActive }}" hint-placeholder-val="{{ true }}">
+        <div style="position:relative; z-index:3; background:linear-gradient(100deg,#e9a13b,#f2bd6a); border-radius:24px; padding:22px 26px; box-shadow:0 18px 40px rgba(233,161,59,0.3); display:flex; flex-wrap:wrap; align-items:center; gap:18px; justify-content:space-between;">
+          <div style="display:flex; align-items:center; gap:16px;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:16px; background:rgba(255,255,255,0.3); font-size:26px;">📣</span>
+            <div>
+              <div style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:24px; color:#fff;">Trwa nabór na sezon 2026/27!</div>
+              <div style="font-size:15px; color:#5a3a06; font-weight:700;">Wolne miejsca w grupach początkujących i średnich · zapisy do 15 września</div>
+            </div>
+          </div>
+          <button onClick="{{ goForm }}" style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:16px; color:#0f5b8f; background:#fff; border:none; border-radius:999px; padding:13px 26px; cursor:pointer; box-shadow:0 8px 18px rgba(0,0,0,0.12); transition:transform .15s;" style-hover="transform:translateY(-2px);">Wypełnij zgłoszenie</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ naborInactive }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative; z-index:3; background:#fff; border:2px dashed #c3d4df; border-radius:24px; padding:22px 26px; display:flex; flex-wrap:wrap; align-items:center; gap:18px; justify-content:space-between;">
+          <div style="display:flex; align-items:center; gap:16px;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:16px; background:#eef3f6; font-size:26px;">⏳</span>
+            <div>
+              <div style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:24px; color:#5a6b75;">Nabór jest obecnie zamknięty</div>
+              <div style="font-size:15px; color:#5a6b75;">Zapisz się na listę powiadomień — damy znać, gdy ruszą kolejne zapisy.</div>
+            </div>
+          </div>
+          <button style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:16px; color:#0f5b8f; background:#fff; border:2px solid #6cb4e0; border-radius:999px; padding:11px 24px; cursor:pointer;" style-hover="background:#e8f4fb;">Powiadom mnie</button>
+        </div>
+      </sc-if>
+      <div style="text-align:right; margin-top:10px;">
+        <button onClick="{{ toggleNabor }}" style="background:none; border:none; color:#9aabb5; font-size:12px; font-weight:700; cursor:pointer; text-decoration:underline;">↻ podgląd stanu: {{ naborStateLabel }}</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ O MNIE / OLA ============ -->
+  <section id="onas" style="max-width:1120px; margin:0 auto; padding:78px 22px 20px;">
+    <div data-reveal style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:48px; align-items:center;">
+      <div style="display:flex; justify-content:center;">
+        <div style="position:relative; width:min(380px,92%); aspect-ratio:4/5;">
+          <div style="position:absolute; inset:0; border-radius:28px; background:repeating-linear-gradient(135deg,#dbecf8,#dbecf8 16px,#eaf4fb 16px,#eaf4fb 32px); border:1px solid #d6e7f2; display:flex; align-items:center; justify-content:center; box-shadow:0 20px 44px rgba(15,91,143,0.12);">
+            <span style="font-family:monospace; font-size:13px; letter-spacing:0.1em; color:#7fa3bd; text-align:center;">ZDJĘCIE OLI<br><span style="font-size:11px; opacity:.75;">(wgrasz później)</span></span>
+          </div>
+          <div style="position:absolute; bottom:-16px; right:-16px; background:#e9a13b; color:#fff; border-radius:18px; padding:11px 18px; box-shadow:0 14px 30px rgba(233,161,59,0.35); font-family:'Fredoka',sans-serif; font-weight:600; font-size:15px;">🏅 Ratownik wodny</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:13px; letter-spacing:0.16em; text-transform:uppercase; color:#e9a13b;">O mnie</div>
+        <h2 style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:clamp(30px,4.5vw,44px); margin:8px 0 0; color:#0f5b8f;">Cześć, jestem Ola!</h2>
+        <div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:17px; color:#1b3a4b; margin-top:8px;">Trener i instruktor pływania • Ratownik wodny</div>
+        <div style="display:flex; flex-direction:column; gap:14px; margin-top:20px; font-size:16px; line-height:1.65; color:#5a6b75;">
+          <p style="margin:0;">Jestem absolwentką Akademii Wychowania Fizycznego i Sportu w Gdańsku. Ze sportem – a zwłaszcza z pływaniem i ratownictwem wodnym – związana jestem od najmłodszych lat.</p>
+          <p style="margin:0;">Mam wieloletnie doświadczenie w pracy z dziećmi. Łączę rzetelną wiedzę z cierpliwym, indywidualnym podejściem do każdego małego pływaka. Wiem, jak ważne są pierwsze chwile w wodzie, dlatego stawiam na bezpieczeństwo, spokój i dobrą zabawę.</p>
+          <p style="margin:0;">Moim celem jest pomóc dzieciom przełamać barierę przed wodą, oswoić się z nią oraz rozwinąć sprawność ruchową i zdolności motoryczne – w atmosferze radości i wzajemnego zaufania.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GRAFIK ============ -->
+  <section id="grafik" style="max-width:1200px; margin:0 auto; padding:64px 22px 20px;">
+    <div data-reveal style="display:flex; flex-wrap:wrap; gap:18px; align-items:flex-end; justify-content:space-between; margin-bottom:26px;">
+      <div>
+        <div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:13px; letter-spacing:0.16em; text-transform:uppercase; color:#e9a13b;">Grafik zajęć</div>
+        <h2 style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:clamp(28px,4vw,40px); margin:8px 0 0; color:#0f5b8f;">Sprawdź terminy na basenach</h2>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+        <span style="font-size:14px; font-weight:700; color:#5a6b75; margin-right:4px;">Basen:</span>
+        <sc-for list="{{ poolFilters }}" as="p" hint-placeholder-count="4">
+          <button onClick="{{ p.onClick }}" style="font-family:'Nunito',sans-serif; font-weight:800; font-size:14px; border-radius:999px; padding:9px 18px; cursor:pointer; border:2px solid {{ p.borderLive }}; background:{{ p.bgLive }}; color:{{ p.fgLive }}; transition:all .15s;">{{ p.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+    <div data-reveal style="background:#fff; border-radius:24px; box-shadow:0 10px 28px rgba(15,91,143,0.08); border:1px solid #eaf2f8; overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; min-width:680px;">
+          <thead>
+            <tr style="background:#0f5b8f; color:#fff; text-align:left;">
+              <th style="padding:16px 20px; font-family:'Fredoka',sans-serif; font-weight:600; font-size:14px;">Dzień</th>
+              <th style="padding:16px 20px; font-family:'Fredoka',sans-serif; font-weight:600; font-size:14px;">Godzina</th>
+              <th style="padding:16px 20px; font-family:'Fredoka',sans-serif; font-weight:600; font-size:14px;">Grupa / poziom</th>
+              <th style="padding:16px 20px; font-family:'Fredoka',sans-serif; font-weight:600; font-size:14px;">Basen</th>
+              <th style="padding:16px 20px; font-family:'Fredoka',sans-serif; font-weight:600; font-size:14px;">Instruktor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{ scheduleRows }}" as="r" hint-placeholder-count="6">
+              <tr style="border-top:1px solid #eef4f8;" style-hover="background:#f4fafe;">
+                <td style="padding:15px 20px; font-weight:800; color:#1b3a4b;">{{ r.day }}</td>
+                <td style="padding:15px 20px; font-variant-numeric:tabular-nums; color:#1b3a4b; font-weight:700;">{{ r.time }}</td>
+                <td style="padding:15px 20px;"><span style="display:inline-block; font-size:13px; font-weight:800; color:#0f5b8f; background:#e8f4fb; border-radius:999px; padding:4px 12px;">{{ r.group }}</span></td>
+                <td style="padding:15px 20px; color:#5a6b75; font-weight:700;">{{ r.pool }}</td>
+                <td style="padding:15px 20px; color:#5a6b75;">{{ r.instructor }}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:14px 20px; font-size:13px; color:#9aabb5; border-top:1px solid #eef4f8;">🔒 Grafik tylko do odczytu · aktualizowany z panelu administratora</div>
+    </div>
+  </section>
+
+  <!-- ============ CENNIK ============ -->
+  <section id="cennik" style="max-width:1200px; margin:0 auto; padding:64px 22px 20px;">
+    <div data-reveal style="text-align:center; max-width:680px; margin:0 auto 40px;">
+      <div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:13px; letter-spacing:0.16em; text-transform:uppercase; color:#e9a13b;">Cennik</div>
+      <h2 style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:clamp(28px,4vw,40px); margin:8px 0 0; color:#0f5b8f;">Przejrzyste ceny, bez ukrytych kosztów</h2>
+    </div>
+    <div data-reveal style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:22px;">
+      <sc-for list="{{ prices }}" as="pr" hint-placeholder-count="3">
+        <div style="background:#fff; border-radius:24px; padding:30px 28px; box-shadow:0 10px 28px rgba(15,91,143,0.08); border:2px solid {{ pr.borderLive }}; position:relative; transition:transform .2s, box-shadow .2s;" style-hover="transform:translateY(-6px); box-shadow:0 22px 44px rgba(15,91,143,0.16);">
+          <sc-if value="{{ pr.popular }}" hint-placeholder-val="{{ false }}">
+            <span style="position:absolute; top:-13px; left:28px; font-family:'Fredoka',sans-serif; font-weight:700; font-size:12px; color:#fff; background:#e9a13b; border-radius:999px; padding:5px 14px;">Najczęściej wybierany</span>
+          </sc-if>
+          <div style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:20px; color:#1b3a4b;">{{ pr.name }}</div>
+          <div style="display:flex; align-items:baseline; gap:6px; margin:12px 0 4px;">
+            <span style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:40px; color:#0f5b8f;">{{ pr.price }}</span>
+            <span style="font-size:15px; color:#5a6b75; font-weight:700;">{{ pr.unit }}</span>
+          </div>
+          <p style="font-size:15px; line-height:1.55; color:#5a6b75; margin:10px 0 0;">{{ pr.desc }}</p>
+        </div>
+      </sc-for>
+    </div>
+    <p data-reveal style="text-align:center; font-size:13px; color:#9aabb5; margin-top:18px;">✏️ Ceny i opisy w pełni edytowalne z panelu administratora</p>
+  </section>
+
+  <!-- ============ GALERIA ============ -->
+  <section id="galeria" style="max-width:1200px; margin:0 auto; padding:64px 22px 20px;">
+    <div data-reveal style="display:flex; flex-wrap:wrap; gap:18px; align-items:flex-end; justify-content:space-between; margin-bottom:26px;">
+      <div>
+        <div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:13px; letter-spacing:0.16em; text-transform:uppercase; color:#e9a13b;">Galeria</div>
+        <h2 style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:clamp(28px,4vw,40px); margin:8px 0 0; color:#0f5b8f;">Tak wyglądają nasze zajęcia</h2>
+      </div>
+      <button onClick="{{ toggleGallery }}" style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:15px; color:#0f5b8f; background:#fff; border:2px solid #6cb4e0; border-radius:999px; padding:11px 22px; cursor:pointer;" style-hover="background:#e8f4fb;">{{ galleryToggleLabel }}</button>
+    </div>
+    <div data-reveal style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px;">
+      <sc-for list="{{ visibleGallery }}" as="g" hint-placeholder-count="6">
+        <button onClick="{{ g.onClick }}" style="border:none; padding:0; cursor:pointer; border-radius:20px; overflow:hidden; aspect-ratio:4/3; position:relative; background:repeating-linear-gradient(135deg,#dcebf7 0px,#dcebf7 0px),#e8f4fb; box-shadow:0 8px 20px rgba(15,91,143,0.08); transition:transform .2s;" style-hover="transform:scale(1.02);">
+          <div style="position:absolute; inset:0; background:repeating-linear-gradient(135deg,#d3e7f5,#d3e7f5 14px,#e8f4fb 14px,#e8f4fb 28px); display:flex; align-items:center; justify-content:center;">
+            <span style="font-family:monospace; font-size:12px; color:#7fa3bd; letter-spacing:0.06em;">{{ g.label }}</span>
+          </div>
+          <span style="position:absolute; right:10px; bottom:10px; width:32px; height:32px; border-radius:50%; background:rgba(15,91,143,0.85); color:#fff; display:flex; align-items:center; justify-content:center; font-size:16px;">⤢</span>
+        </button>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- ============ OBOZY ============ -->
+  <section id="obozy" style="position:relative; margin-top:72px; background:linear-gradient(170deg,#0f5b8f,#0a3f63); color:#fff; overflow:hidden;">
+    <div style="position:absolute; top:-1px; left:0; right:0; transform:rotate(180deg); line-height:0;">
+      <svg viewBox="0 0 1440 70" preserveAspectRatio="none" style="width:100%; height:60px; display:block;"><path d="M0,35 C360,70 720,0 1080,35 C1260,52 1380,18 1440,35 L1440,70 L0,70 Z" fill="#f4fafe"/></svg>
+    </div>
+    <div style="max-width:1200px; margin:0 auto; padding:90px 22px 80px; display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:40px; align-items:center;">
+      <div data-reveal>
+        <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(255,210,122,0.18); border-radius:999px; padding:7px 15px; font-weight:800; font-size:14px; color:#ffd27a;">☀️ Lato 2026</div>
+        <h2 style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:clamp(28px,4vw,42px); margin:16px 0 0;">Obozy letnie z pływaniem</h2>
+        <p style="font-size:17px; line-height:1.6; color:#cfe6f5; margin:16px 0 0;">Tydzień pełen wody, zabawy i nauki pływania. Codzienne zajęcia na basenie, gry zespołowe i bezpieczna, ciepła atmosfera. Turnusy w lipcu i sierpniu.</p>
+        <div style="display:flex; flex-wrap:wrap; gap:22px; margin-top:24px;">
+          <div><div style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:24px; color:#ffd27a;">7–12 lat</div><div style="font-size:13px; color:#cfe6f5;">wiek uczestników</div></div>
+          <div><div style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:24px; color:#ffd27a;">5 dni</div><div style="font-size:13px; color:#cfe6f5;">pn–pt, 9:00–15:00</div></div>
+        </div>
+        <div style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:18px; padding:16px 20px; margin-top:26px; display:flex; flex-wrap:wrap; gap:18px; align-items:center;">
+          <span style="font-size:15px; color:#cfe6f5;">📞 Zapisy i pytania:</span>
+          <span style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:18px; color:#fff;">+48 600 100 200</span>
+          <span style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:18px; color:#fff;">obozy@allswim.pl</span>
+        </div>
+      </div>
+      <div data-reveal style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <div style="aspect-ratio:3/4; border-radius:20px; background:repeating-linear-gradient(135deg,#1a6ca3,#1a6ca3 14px,#175f8f 14px,#175f8f 28px); display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,0.25);"><span style="font-family:monospace; font-size:11px; color:rgba(255,255,255,0.7);">ZDJĘCIE 1</span></div>
+        <div style="aspect-ratio:3/4; border-radius:20px; background:repeating-linear-gradient(135deg,#1a6ca3,#1a6ca3 14px,#175f8f 14px,#175f8f 28px); display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,0.25); margin-top:24px;"><span style="font-family:monospace; font-size:11px; color:rgba(255,255,255,0.7);">ZDJĘCIE 2</span></div>
+      </div>
+    </div>
+    <div style="position:absolute; bottom:-1px; left:0; right:0; line-height:0;">
+      <svg viewBox="0 0 1440 70" preserveAspectRatio="none" style="width:100%; height:60px; display:block;"><path d="M0,35 C360,70 720,0 1080,35 C1260,52 1380,18 1440,35 L1440,70 L0,70 Z" fill="#f4fafe"/></svg>
+    </div>
+  </section>
+
+  <!-- ============ REGULAMIN ============ -->
+  <section id="regulamin" style="max-width:860px; margin:0 auto; padding:64px 22px 20px;">
+    <div data-reveal style="text-align:center; margin-bottom:34px;">
+      <div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:13px; letter-spacing:0.16em; text-transform:uppercase; color:#e9a13b;">Regulamin</div>
+      <h2 style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:clamp(28px,4vw,40px); margin:8px 0 0; color:#0f5b8f;">Zasady uczestnictwa</h2>
+    </div>
+    <div data-reveal style="display:flex; flex-direction:column; gap:12px;">
+      <sc-for list="{{ regulamin }}" as="rg" hint-placeholder-count="5">
+        <div style="background:#fff; border-radius:18px; border:1px solid #eaf2f8; box-shadow:0 6px 18px rgba(15,91,143,0.06); overflow:hidden;">
+          <button onClick="{{ rg.onClick }}" style="width:100%; text-align:left; background:none; border:none; cursor:pointer; padding:18px 22px; display:flex; align-items:center; justify-content:space-between; gap:16px; font-family:'Fredoka',sans-serif; font-weight:600; font-size:17px; color:#1b3a4b;">
+            <span>{{ rg.title }}</span>
+            <span style="flex:none; width:30px; height:30px; border-radius:50%; background:#e8f4fb; color:#0f5b8f; display:flex; align-items:center; justify-content:center; font-size:18px; transform:{{ rg.iconRotateLive }}; transition:transform .2s;">⌄</span>
+          </button>
+          <sc-if value="{{ rg.open }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:0 22px 20px; font-size:15px; line-height:1.65; color:#5a6b75;">{{ rg.body }}</div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- ============ FORMULARZ NABORU ============ -->
+  <section id="nabor" style="max-width:1200px; margin:0 auto; padding:64px 22px 20px;">
+    <div data-reveal style="background:#fff; border-radius:28px; box-shadow:0 16px 40px rgba(15,91,143,0.1); border:1px solid #eaf2f8; overflow:hidden; display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));">
+      <div style="background:linear-gradient(160deg,#6cb4e0,#0f5b8f); color:#fff; padding:42px 38px; position:relative; overflow:hidden;">
+        <div style="position:relative; z-index:2;">
+          <sc-if value="{{ naborActive }}" hint-placeholder-val="{{ true }}">
+            <span style="display:inline-flex; align-items:center; gap:7px; background:#e9a13b; border-radius:999px; padding:6px 14px; font-family:'Fredoka',sans-serif; font-weight:700; font-size:13px; color:#fff;">● Trwa nabór</span>
+          </sc-if>
+          <h2 style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:32px; margin:16px 0 0;">Zapisz dziecko na zajęcia</h2>
+          <p style="font-size:16px; line-height:1.6; color:#e0f0fa; margin:14px 0 0;">Wypełnij krótki formularz — odezwiemy się z propozycją grupy i terminu w ciągu 2 dni roboczych.</p>
+          <div style="display:flex; flex-direction:column; gap:14px; margin-top:28px;">
+            <div style="display:flex; align-items:center; gap:12px; font-size:15px; color:#eaf6fc;"><span style="font-size:20px;">✓</span> Pierwsze zajęcia z oceną poziomu</div>
+            <div style="display:flex; align-items:center; gap:12px; font-size:15px; color:#eaf6fc;"><span style="font-size:20px;">✓</span> Małe grupy do 6 osób</div>
+            <div style="display:flex; align-items:center; gap:12px; font-size:15px; color:#eaf6fc;"><span style="font-size:20px;">✓</span> Elastyczne terminy na 2 basenach w Tczewie</div>
+          </div>
+        </div>
+        <div style="position:absolute; right:-30px; bottom:-30px; width:160px; height:160px; border-radius:50%; background:rgba(255,255,255,0.08);"></div>
+      </div>
+
+      <div style="padding:42px 38px;">
+        <sc-if value="{{ formNotSent }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex; flex-direction:column; gap:18px;">
+            <div>
+              <label style="display:block; font-weight:800; font-size:14px; color:#1b3a4b; margin-bottom:8px;">Poziom dziecka</label>
+              <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                <sc-for list="{{ levelChoices }}" as="lc" hint-placeholder-count="4">
+                  <button onClick="{{ lc.onClick }}" style="font-family:'Nunito',sans-serif; font-weight:800; font-size:14px; border-radius:999px; padding:9px 16px; cursor:pointer; border:2px solid {{ lc.borderLive }}; background:{{ lc.bgLive }}; color:{{ lc.fgLive }}; transition:all .15s;">{{ lc.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div>
+              <label style="display:block; font-weight:800; font-size:14px; color:#1b3a4b; margin-bottom:8px;">Czy dziecko kontynuuje zajęcia?</label>
+              <div style="display:flex; gap:8px;">
+                <sc-for list="{{ contChoices }}" as="cc" hint-placeholder-count="2">
+                  <button onClick="{{ cc.onClick }}" style="flex:1; font-family:'Nunito',sans-serif; font-weight:800; font-size:14px; border-radius:14px; padding:11px 16px; cursor:pointer; border:2px solid {{ cc.borderLive }}; background:{{ cc.bgLive }}; color:{{ cc.fgLive }}; transition:all .15s;">{{ cc.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+              <div>
+                <label style="display:block; font-weight:800; font-size:14px; color:#1b3a4b; margin-bottom:8px;">Imię i nazwisko dziecka</label>
+                <input value="{{ formName }}" onChange="{{ onName }}" placeholder="np. Zosia Kowalska" style="width:100%; font-family:'Nunito',sans-serif; font-size:15px; padding:13px 16px; border-radius:14px; border:2px solid #e3eef5; background:#f8fcff; color:#1b3a4b; outline:none;" style-focus="border-color:#6cb4e0;">
+              </div>
+              <div>
+                <label style="display:block; font-weight:800; font-size:14px; color:#1b3a4b; margin-bottom:8px;">Wiek</label>
+                <input value="{{ formAge }}" onChange="{{ onAge }}" placeholder="np. 7" style="width:100%; font-family:'Nunito',sans-serif; font-size:15px; padding:13px 16px; border-radius:14px; border:2px solid #e3eef5; background:#f8fcff; color:#1b3a4b; outline:none;" style-focus="border-color:#6cb4e0;">
+              </div>
+            </div>
+            <div>
+              <label style="display:block; font-weight:800; font-size:14px; color:#1b3a4b; margin-bottom:8px;">E-mail rodzica</label>
+              <input value="{{ formEmail }}" onChange="{{ onEmail }}" placeholder="np. rodzic@email.pl" style="width:100%; font-family:'Nunito',sans-serif; font-size:15px; padding:13px 16px; border-radius:14px; border:2px solid #e3eef5; background:#f8fcff; color:#1b3a4b; outline:none;" style-focus="border-color:#6cb4e0;">
+            </div>
+            <button onClick="{{ submitForm }}" style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:17px; color:#fff; background:#e9a13b; border:none; border-radius:999px; padding:15px 30px; cursor:pointer; box-shadow:0 10px 24px rgba(233,161,59,0.35); transition:transform .15s;" style-hover="transform:translateY(-2px);">Wyślij zgłoszenie</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ formSent }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:320px; gap:14px;">
+            <div style="width:74px; height:74px; border-radius:50%; background:#e8f7ee; color:#1f8a5b; display:flex; align-items:center; justify-content:center; font-size:38px;">✓</div>
+            <div style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:24px; color:#0f5b8f;">Dziękujemy za zgłoszenie!</div>
+            <p style="font-size:16px; color:#5a6b75; max-width:320px; line-height:1.55;">Odezwiemy się na podany e-mail w ciągu 2 dni roboczych z propozycją grupy i terminu.</p>
+            <button onClick="{{ resetForm }}" style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:15px; color:#0f5b8f; background:#fff; border:2px solid #6cb4e0; border-radius:999px; padding:11px 22px; cursor:pointer; margin-top:6px;">Wyślij kolejne</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STOPKA ============ -->
+  <footer id="kontakt" style="position:relative; margin-top:60px; background:linear-gradient(170deg,#0f5b8f,#0a3f63); color:#fff;">
+    <div style="position:absolute; top:-1px; left:0; right:0; transform:rotate(180deg); line-height:0;">
+      <svg viewBox="0 0 1440 70" preserveAspectRatio="none" style="width:100%; height:58px; display:block;"><path d="M0,35 C360,70 720,0 1080,35 C1260,52 1380,18 1440,35 L1440,70 L0,70 Z" fill="#f4fafe"/></svg>
+    </div>
+    <div style="max-width:1200px; margin:0 auto; padding:90px 22px 36px; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:40px;">
+      <div>
+        <div style="background:#fff; border-radius:18px; padding:12px 16px; display:inline-flex;"><img src="assets/logo.png" style="height:46px; display:block;"></div>
+        <p style="font-size:15px; line-height:1.6; color:#cfe6f5; margin:18px 0 0; max-width:280px;">Szkółka pływacka prowadzona przez Olę Laskowską. Nauka pływania dla dzieci z uśmiechem i bezpieczeństwem.</p>
+      </div>
+      <div>
+        <div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:16px; margin-bottom:16px; color:#ffd27a;">Kontakt</div>
+        <div style="display:flex; flex-direction:column; gap:10px; font-size:15px; color:#cfe6f5;">
+          <span>📧 kontakt@allswim.pl</span>
+          <span>📞 +48 600 100 200</span>
+          <span>📍 Tczew · Basen CSiR i Pływalnia miejska</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:16px; margin-bottom:16px; color:#ffd27a;">Nawigacja</div>
+        <div style="display:flex; flex-direction:column; gap:9px; font-size:15px;">
+          <a href="#grafik" style="color:#cfe6f5; text-decoration:none;" style-hover="color:#fff;">Grafik zajęć</a>
+          <a href="#cennik" style="color:#cfe6f5; text-decoration:none;" style-hover="color:#fff;">Cennik</a>
+          <a href="#galeria" style="color:#cfe6f5; text-decoration:none;" style-hover="color:#fff;">Galeria</a>
+          <a href="#regulamin" style="color:#cfe6f5; text-decoration:none;" style-hover="color:#fff;">Regulamin</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:16px; margin-bottom:16px; color:#ffd27a;">Obserwuj</div>
+        <div style="display:flex; gap:12px;">
+          <a href="#" style="text-decoration:none; width:46px; height:46px; border-radius:14px; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; font-size:20px; transition:background .15s;" style-hover="background:#e9a13b;">📷</a>
+          <a href="#" style="text-decoration:none; width:46px; height:46px; border-radius:14px; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; font-size:20px; transition:background .15s;" style-hover="background:#e9a13b;">👍</a>
+          <a href="#" style="text-decoration:none; width:46px; height:46px; border-radius:14px; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; font-size:20px; transition:background .15s;" style-hover="background:#e9a13b;">✉️</a>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,0.12); padding:20px 22px; text-align:center; font-size:13px; color:#9ec3dc;">© 2026 ALL SWIM · Wszystkie prawa zastrzeżone · Makieta projektowa</div>
+  </footer>
+
+  <!-- ============ LIGHTBOX ============ -->
+  <sc-if value="{{ lightboxOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeLightbox }}" style="position:fixed; inset:0; z-index:100; background:rgba(10,63,99,0.88); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:30px;">
+      <button onClick="{{ closeLightbox }}" style="position:absolute; top:22px; right:24px; width:48px; height:48px; border-radius:50%; border:none; background:rgba(255,255,255,0.16); color:#fff; font-size:24px; cursor:pointer;">✕</button>
+      <button onClick="{{ prevImg }}" style="position:absolute; left:24px; top:50%; transform:translateY(-50%); width:52px; height:52px; border-radius:50%; border:none; background:rgba(255,255,255,0.16); color:#fff; font-size:24px; cursor:pointer;">‹</button>
+      <button onClick="{{ nextImg }}" style="position:absolute; right:24px; top:50%; transform:translateY(-50%); width:52px; height:52px; border-radius:50%; border:none; background:rgba(255,255,255,0.16); color:#fff; font-size:24px; cursor:pointer;">›</button>
+      <div onClick="{{ stop }}" style="width:min(820px,90vw); aspect-ratio:4/3; border-radius:24px; overflow:hidden; box-shadow:0 30px 70px rgba(0,0,0,0.5); background:repeating-linear-gradient(135deg,#d3e7f5,#d3e7f5 22px,#e8f4fb 22px,#e8f4fb 44px); display:flex; align-items:center; justify-content:center;">
+        <span style="font-family:monospace; font-size:16px; color:#5a8bab; letter-spacing:0.08em;">{{ lightboxLabel }}</span>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;heroIntensity&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;spokojne&quot;,&quot;średnie&quot;,&quot;żywe&quot;],&quot;default&quot;:&quot;średnie&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = {
+    mobileOpen: false,
+    naborActive: true,
+    poolFilter: 'all',
+    lightbox: null,
+    openReg: 0,
+    showAllGallery: false,
+    fLevel: 'Początkujący',
+    fCont: 'nie',
+    fName: '',
+    fAge: '',
+    fEmail: '',
+    sent: false,
+  };
+
+  componentDidMount() {
+    this._io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.style.opacity = '1';
+          e.target.style.transform = 'none';
+          this._io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    this._scan();
+  }
+  componentDidUpdate() { this._scan(); }
+  _scan() {
+    if (!this._io) return;
+    requestAnimationFrame(() => {
+      document.querySelectorAll('[data-reveal]').forEach((el) => {
+        if (el.dataset.revInit) return;
+        el.dataset.revInit = '1';
+        el.style.transition = 'opacity .7s ease, transform .7s ease';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(28px)';
+        this._io.observe(el);
+      });
+    });
+  }
+
+  _go(id) {
+    const el = document.getElementById(id);
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth' });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const C = { blue:'#6cb4e0', navy:'#0f5b8f', orange:'#e9a13b', lightBlue:'#e8f4fb', grey:'#5a6b75' };
+
+    const navItems = [
+      { label:'O nas', href:'#onas' }, { label:'Grafik', href:'#grafik' },
+      { label:'Nabór', href:'#nabor' }, { label:'Cennik', href:'#cennik' },
+      { label:'Galeria', href:'#galeria' }, { label:'Obozy', href:'#obozy' },
+      { label:'Regulamin', href:'#regulamin' }, { label:'Kontakt', href:'#kontakt' },
+    ];
+
+    // bubbles based on hero intensity prop
+    const intensity = this.props.heroIntensity || 'średnie';
+    const counts = { 'spokojne': 6, 'średnie': 11, 'żywe': 18 };
+    const n = counts[intensity] ?? 11;
+    const cols = ['rgba(168,212,239,0.55)','rgba(255,255,255,0.45)','rgba(255,210,122,0.4)'];
+    const bubbles = Array.from({ length: n }, (_, i) => {
+      const r = (k) => ((Math.sin((i + 1) * k) + 1) / 2);
+      const size = 8 + Math.round(r(2.3) * 22);
+      return {
+        leftLive: (3 + r(1.7) * 92).toFixed(1) + '%',
+        sizeLive: size + 'px',
+        colorLive: cols[i % cols.length],
+        durLive: (6 + r(3.1) * 7).toFixed(1) + 's',
+        delayLive: (r(4.4) * 8).toFixed(1) + 's',
+      };
+    });
+
+    const allSchedule = [
+      { day:'Poniedziałek', time:'16:00', group:'Oswajanie z wodą', pool:'Basen CSiR', instructor:'Ola Laskowska' },
+      { day:'Poniedziałek', time:'17:00', group:'Średni', pool:'Basen CSiR', instructor:'Ola Laskowska' },
+      { day:'Wtorek', time:'16:30', group:'Początkujący', pool:'Pływalnia miejska', instructor:'Ola Laskowska' },
+      { day:'Środa', time:'17:00', group:'Zaawansowany', pool:'Basen CSiR', instructor:'Ola Laskowska' },
+      { day:'Czwartek', time:'16:00', group:'Średni', pool:'Pływalnia miejska', instructor:'Ola Laskowska' },
+      { day:'Piątek', time:'17:30', group:'Początkujący', pool:'Basen CSiR', instructor:'Ola Laskowska' },
+      { day:'Sobota', time:'10:00', group:'Zaawansowany', pool:'Pływalnia miejska', instructor:'Ola Laskowska' },
+      { day:'Sobota', time:'11:00', group:'Początkujący', pool:'Pływalnia miejska', instructor:'Ola Laskowska' },
+    ];
+    const pools = ['Basen CSiR', 'Pływalnia miejska'];
+    const scheduleRows = s.poolFilter === 'all' ? allSchedule : allSchedule.filter(r => r.pool === s.poolFilter);
+
+    const poolFilters = [{ key:'all', label:'Wszystkie' }, ...pools.map(p => ({ key:p, label:p }))].map(p => {
+      const active = s.poolFilter === p.key;
+      return {
+        label: p.label,
+        onClick: () => this.setState({ poolFilter: p.key }),
+        bgLive: active ? C.orange : '#fff',
+        fgLive: active ? '#fff' : C.navy,
+        borderLive: active ? C.orange : '#d6e7f2',
+      };
+    });
+
+    const prices = [
+      { name:'Karnet miesięczny', price:'320 zł', unit:'/ mies.', popular:false, borderLive:'#eaf2f8', desc:'4 zajęcia w miesiącu (1×/tydz.), jedna grupa i basen.' },
+      { name:'Karnet 2× w tygodniu', price:'560 zł', unit:'/ mies.', popular:true, borderLive:'#6cb4e0', desc:'8 zajęć w miesiącu — najszybsze postępy. Wybór dwóch terminów.' },
+      { name:'Wejście jednorazowe', price:'45 zł', unit:'/ zajęcia', popular:false, borderLive:'#eaf2f8', desc:'Pojedyncze zajęcia bez zobowiązań — dobre na start lub uzupełnienie.' },
+    ];
+
+    const galleryAll = [
+      'NA BASENIE 01','GRUPA SKRZATY','NAUKA KRAULA','ZABAWA W WODZIE','START Z SŁUPKA','UŚMIECH','OBÓZ LATO','DYPLOMY','RODZICE I DZIECI',
+    ].map((label, i) => ({ label, onClick: () => this.setState({ lightbox: i }) }));
+    const visibleGallery = s.showAllGallery ? galleryAll : galleryAll.slice(0, 6);
+
+    const regData = [
+      { title:'Zapisy i kwalifikacja do grup', body:'Zapisy odbywają się przez formularz online. Poziom dziecka oceniamy na pierwszych zajęciach i na tej podstawie dobieramy grupę.' },
+      { title:'Płatności i karnety', body:'Opłaty wnosimy z góry za miesiąc. Karnet jest imienny. W razie nieobecności istnieje możliwość odrobienia zajęć w innym terminie.' },
+      { title:'Nieobecności i odrabianie', body:'Nieobecność prosimy zgłaszać min. 12 godzin wcześniej. Zgłoszone zajęcia można odrobić w ciągu 30 dni w dowolnej grupie o odpowiednim poziomie.' },
+      { title:'Bezpieczeństwo na basenie', body:'Dzieci pozostają pod opieką instruktora wyłącznie w trakcie zajęć. Obowiązują regulaminy poszczególnych pływalni oraz polecenia ratownika.' },
+      { title:'Rezygnacja', body:'Rezygnację należy zgłosić do końca miesiąca poprzedzającego. Niewykorzystane wejścia z karnetu nie przechodzą na kolejny miesiąc.' },
+    ];
+    const regulamin = regData.map((r, i) => ({
+      title: r.title, body: r.body,
+      open: s.openReg === i,
+      onClick: () => this.setState({ openReg: s.openReg === i ? -1 : i }),
+      iconRotateLive: s.openReg === i ? 'rotate(180deg)' : 'rotate(0deg)',
+    }));
+
+    const levelNames = ['Oswajanie z wodą', 'Początkujący', 'Średnio zaaw.', 'Zaawansowany'];
+    const levelChoices = levelNames.map(l => {
+      const active = s.fLevel === l;
+      return { label:l, onClick:() => this.setState({ fLevel:l }),
+        bgLive: active ? C.lightBlue : '#fff', fgLive: active ? C.navy : C.grey, borderLive: active ? C.blue : '#e3eef5' };
+    });
+    const contChoices = [{ k:'tak', label:'Tak, kontynuuje' }, { k:'nie', label:'Nie, pierwszy raz' }].map(c => {
+      const active = s.fCont === c.k;
+      return { label:c.label, onClick:() => this.setState({ fCont:c.k }),
+        bgLive: active ? C.lightBlue : '#fff', fgLive: active ? C.navy : C.grey, borderLive: active ? C.blue : '#e3eef5' };
+    });
+
+    return {
+      navItems,
+      mobileOpen: s.mobileOpen,
+      toggleMobile: () => this.setState({ mobileOpen: !s.mobileOpen }),
+      closeMobile: () => this.setState({ mobileOpen: false }),
+      goForm: () => { this.setState({ mobileOpen:false }); this._go('nabor'); },
+      goSchedule: () => this._go('grafik'),
+
+      bubbles,
+
+      naborActive: s.naborActive,
+      naborInactive: !s.naborActive,
+      naborStateLabel: s.naborActive ? 'aktywny' : 'nieaktywny',
+      toggleNabor: () => this.setState({ naborActive: !s.naborActive }),
+
+      poolFilters, scheduleRows,
+      prices,
+
+      visibleGallery,
+      showAllGallery: s.showAllGallery,
+      galleryToggleLabel: s.showAllGallery ? 'Pokaż mniej' : 'Zobacz wszystkie',
+      toggleGallery: () => this.setState({ showAllGallery: !s.showAllGallery }),
+
+      regulamin,
+
+      lightboxOpen: s.lightbox !== null,
+      lightboxLabel: s.lightbox !== null ? (galleryAll[s.lightbox] || {}).label : '',
+      closeLightbox: () => this.setState({ lightbox: null }),
+      stop: (e) => { e.stopPropagation(); },
+      prevImg: (e) => { e.stopPropagation(); this.setState({ lightbox: (s.lightbox - 1 + galleryAll.length) % galleryAll.length }); },
+      nextImg: (e) => { e.stopPropagation(); this.setState({ lightbox: (s.lightbox + 1) % galleryAll.length }); },
+
+      levelChoices, contChoices,
+      formName: s.fName, formAge: s.fAge, formEmail: s.fEmail,
+      onName: (e) => this.setState({ fName: e.target.value }),
+      onAge: (e) => this.setState({ fAge: e.target.value }),
+      onEmail: (e) => this.setState({ fEmail: e.target.value }),
+      formNotSent: !s.sent, formSent: s.sent,
+      submitForm: () => this.setState({ sent: true }),
+      resetForm: () => this.setState({ sent: false, fName:'', fAge:'', fEmail:'' }),
+    };
+  }
+}
+</script>
+</body>
+</html>
