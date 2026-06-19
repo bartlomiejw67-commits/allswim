@@ -88,6 +88,27 @@ img { max-width: 100%; }
   .as-gallery-grid { grid-template-columns: 1fr 1fr; }
 }
 
+/* ===== Obozy: 4 kafelki w rzędzie na desktopie, 2x2 na telefonie ===== */
+.as-camp-grid { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 720px) {
+  .as-camp-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ===== Grafik tygodnia: 7 kolumn na desktopie, 2 na telefonie ===== */
+.as-week-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+@media (max-width: 760px) {
+  .as-week-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ===== Formularz naboru: na telefonie pola w jednej kolumnie + mniejszy padding ===== */
+@media (max-width: 600px) {
+  .as-form-row { grid-template-columns: 1fr !important; }
+  .as-form-pad { padding: 26px 20px !important; }
+}
+
+/* ===== Menu kontaktu (kopiuj / napisz / zadzwoń) ===== */
+.as-contact-opt:hover { background: #f1f7fb; }
+
 /* ===== Hero: układ slogan / bańka / reszta ===== */
 .as-hero-grid {
   grid-template-columns: 1.08fr 0.92fr;

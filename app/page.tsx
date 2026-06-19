@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "@/convex/_generated/api";
@@ -199,6 +199,7 @@ export default function Home() {
     day: DAY_NAMES[r.dayOfWeek] || "",
     dayIdx: r.dayOfWeek,
     time: r.startTime,
+    endTime: r.endTime || "",
     group: r.groupName || "",
     pool: r.poolName || "",
     instructor: r.instructor || "",
@@ -274,6 +275,12 @@ export default function Home() {
   }
 
   const scheduleRows = poolFilter === "all" ? scheduleAll : scheduleAll.filter((r) => r.pool === poolFilter);
+  // Kolory rozróżniające baseny w grafiku.
+  const POOL_PALETTE = ["#6cb4e0", "#e9a13b", "#5cb98a", "#a07cd6", "#e0697f", "#3fa0a8"];
+  const poolColor = (name: string) => {
+    const idx = poolsView.indexOf(name);
+    return POOL_PALETTE[(idx < 0 ? 0 : idx) % POOL_PALETTE.length];
+  };
 
   // Zdjęcia galerii zajęć (fallback: placeholdery z etykietami).
   const galleryItems: { url: string | null; label: string }[] =
@@ -288,8 +295,8 @@ export default function Home() {
       ? campImages.map((g) => ({ url: g.url, label: g.caption || "" }))
       : [];
   // Dwa zdjęcia flagowe obozów (uzupełnione placeholderami, jeśli brak).
-  const flagship: { url: string | null; label: string }[] = [...campPhotoItems.slice(0, 2)];
-  while (flagship.length < 2) flagship.push({ url: null, label: `ZDJĘCIE ${flagship.length + 1}` });
+  const flagship: { url: string | null; label: string }[] = [...campPhotoItems.slice(0, 4)];
+  while (flagship.length < 4) flagship.push({ url: null, label: `ZDJĘCIE ${flagship.length + 1}` });
 
   const camps = campsData ?? [];
 
@@ -520,28 +527,37 @@ export default function Home() {
           )}
         </div>
         {hasSchedule ? (
-          <div className="as-reveal" style={{ background: "#fff", borderRadius: 24, boxShadow: "0 10px 28px rgba(15,91,143,0.08)", border: "1px solid #eaf2f8", overflow: "hidden" }}>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 680 }}>
-                <thead>
-                  <tr style={{ background: C.navy, color: "#fff", textAlign: "left" }}>
-                    {["Dzień", "Godzina", "Grupa", "Basen", "Instruktor"].map((th) => (
-                      <th key={th} className="font-fredoka" style={{ padding: "16px 20px", fontWeight: 600, fontSize: 14 }}>{th}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {scheduleRows.map((r, i) => (
-                    <tr key={i} className="as-row" style={{ borderTop: "1px solid #eef4f8" }}>
-                      <td style={{ padding: "15px 20px", fontWeight: 800, color: "#1b3a4b" }}>{r.day}</td>
-                      <td style={{ padding: "15px 20px", fontVariantNumeric: "tabular-nums", color: "#1b3a4b", fontWeight: 700 }}>{r.time}</td>
-                      <td style={{ padding: "15px 20px" }}><span style={{ display: "inline-block", fontSize: 13, fontWeight: 800, color: C.navy, background: C.lightBlue, borderRadius: 999, padding: "4px 12px" }}>{r.group}</span></td>
-                      <td style={{ padding: "15px 20px", color: C.grey, fontWeight: 700 }}>{r.pool}</td>
-                      <td style={{ padding: "15px 20px", color: C.grey }}>{r.instructor}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className="as-reveal" style={{ background: "#fff", borderRadius: 24, boxShadow: "0 10px 28px rgba(15,91,143,0.08)", border: "1px solid #eaf2f8", padding: 16 }}>
+            <div className="as-week-grid" style={{ display: "grid", gap: 10 }}>
+              {DAY_NAMES.map((d, i) => {
+                const day = scheduleRows.filter((r) => r.dayIdx === i).sort((a, b) => a.time.localeCompare(b.time));
+                return (
+                  <div key={i} style={{ background: "#f8fcff", borderRadius: 14, border: "1px solid #eaf2f8", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 104 }}>
+                    <div className="font-fredoka" style={{ background: C.navy, color: "#fff", fontWeight: 600, fontSize: 13, padding: "9px 10px", textAlign: "center" }}>{d}</div>
+                    <div style={{ padding: 8, display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
+                      {day.length === 0 ? (
+                        <div style={{ color: "#b6c6d2", fontSize: 13, textAlign: "center", margin: "auto", padding: "10px 4px" }}>—</div>
+                      ) : (
+                        day.map((r, j) => {
+                          const col = poolColor(r.pool);
+                          return (
+                            <div key={j} style={{ background: "#fff", borderRadius: 10, border: "1px solid #eaf2f8", borderLeft: `4px solid ${col}`, padding: "8px 10px" }}>
+                              <div style={{ fontVariantNumeric: "tabular-nums", fontWeight: 800, fontSize: 13, color: C.navy }}>{r.time}{r.endTime ? `–${r.endTime}` : ""}</div>
+                              <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 13, color: "#1b3a4b", marginTop: 2 }}>{r.group}</div>
+                              {r.pool && (
+                                <div style={{ fontSize: 11, color: C.grey, marginTop: 3, display: "flex", alignItems: "center", gap: 5 }}>
+                                  <span style={{ width: 8, height: 8, borderRadius: 3, background: col, display: "inline-block", flex: "none" }} />{r.pool}
+                                </div>
+                              )}
+                              {r.instructor && <div style={{ fontSize: 11, color: C.grey, marginTop: 2 }}>👤 {r.instructor}</div>}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         ) : (
@@ -686,7 +702,7 @@ export default function Home() {
                 </button>
               )}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div className="as-camp-grid" style={{ display: "grid", gap: 14 }}>
               {flagship.map((item, i) => (
                 <button key={i} onClick={() => { if (item.url) setLightbox({ items: campPhotoItems, index: i }); }} className={item.url ? "as-gallery-item" : undefined} style={{ border: "none", padding: 0, cursor: item.url ? "pointer" : "default", borderRadius: 20, overflow: "hidden", aspectRatio: "4/3", position: "relative", boxShadow: "0 10px 24px rgba(0,0,0,0.25)" }}>
                   {item.url ? (
@@ -709,8 +725,8 @@ export default function Home() {
           {/* Kontakt */}
           <div className="as-reveal" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 18, padding: "16px 20px", display: "flex", flexWrap: "wrap", gap: 18, alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: 15, color: "#cfe6f5" }}>📞 Zapisy i pytania:</span>
-            <span className="font-fredoka" style={{ fontWeight: 700, fontSize: 18, color: "#fff" }}>{contactPhone}</span>
-            <span className="font-fredoka" style={{ fontWeight: 700, fontSize: 18, color: "#fff" }}>{contactEmail}</span>
+            <ContactAction value={contactPhone} type="phone" triggerStyle={{ fontWeight: 700, fontSize: 18, color: "#fff" }} />
+            <ContactAction value={contactEmail} type="email" triggerStyle={{ fontWeight: 700, fontSize: 18, color: "#fff" }} />
           </div>
         </div>
         <div style={{ position: "absolute", bottom: -1, left: 0, right: 0, lineHeight: 0 }}>
@@ -750,7 +766,7 @@ export default function Home() {
       {/* ============ FORMULARZ NABORU ============ */}
       <section id="nabor" style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 22px 20px" }}>
         <div className="as-reveal" style={{ background: "#fff", borderRadius: 28, boxShadow: "0 16px 40px rgba(15,91,143,0.1)", border: "1px solid #eaf2f8", overflow: "hidden", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))" }}>
-          <div style={{ background: "linear-gradient(160deg,#6cb4e0,#0f5b8f)", color: "#fff", padding: "42px 38px", position: "relative", overflow: "hidden" }}>
+          <div className="as-form-pad" style={{ background: "linear-gradient(160deg,#6cb4e0,#0f5b8f)", color: "#fff", padding: "42px 38px", position: "relative", overflow: "hidden" }}>
             <div style={{ position: "relative", zIndex: 2 }}>
               {naborActive && (
                 <span className="font-fredoka" style={{ display: "inline-flex", alignItems: "center", gap: 7, background: C.orange, borderRadius: 999, padding: "6px 14px", fontWeight: 700, fontSize: 13, color: "#fff" }}>● Trwa nabór</span>
@@ -766,7 +782,7 @@ export default function Home() {
             <div style={{ position: "absolute", right: -30, bottom: -30, width: 160, height: 160, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
           </div>
 
-          <div style={{ padding: "42px 38px" }}>
+          <div className="as-form-pad" style={{ padding: "42px 38px" }}>
             {!sent ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                 <div>
@@ -795,7 +811,7 @@ export default function Home() {
                     })}
                   </div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div className="as-form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                   <div>
                     <label style={{ display: "block", fontWeight: 800, fontSize: 14, color: "#1b3a4b", marginBottom: 8 }}>Imię i nazwisko dziecka</label>
                     <input value={fName} onChange={(e) => setFName(e.target.value)} placeholder="np. Zosia Kowalska" className="as-input" style={{ width: "100%", fontSize: 15, padding: "13px 16px", borderRadius: 14, border: "2px solid #e3eef5", background: "#f8fcff", color: "#1b3a4b" }} />
@@ -805,7 +821,7 @@ export default function Home() {
                     <input value={fAge} onChange={(e) => setFAge(e.target.value)} placeholder="np. 7" className="as-input" style={{ width: "100%", fontSize: 15, padding: "13px 16px", borderRadius: 14, border: "2px solid #e3eef5", background: "#f8fcff", color: "#1b3a4b" }} />
                   </div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div className="as-form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                   <div>
                     <label style={{ display: "block", fontWeight: 800, fontSize: 14, color: "#1b3a4b", marginBottom: 8 }}>E-mail rodzica</label>
                     <input value={fEmail} onChange={(e) => setFEmail(e.target.value)} placeholder="np. rodzic@email.pl" className="as-input" style={{ width: "100%", fontSize: 15, padding: "13px 16px", borderRadius: 14, border: "2px solid #e3eef5", background: "#f8fcff", color: "#1b3a4b" }} />
@@ -871,8 +887,8 @@ export default function Home() {
           <div>
             <div className="font-fredoka" style={{ fontWeight: 600, fontSize: 16, marginBottom: 16, color: "#ffd27a" }}>Kontakt</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 15, color: "#cfe6f5" }}>
-              <span>📧 {contactEmail}</span>
-              <span>📞 {contactPhone}</span>
+              <span>📧 <ContactAction value={contactEmail} type="email" triggerStyle={{ color: "#fff", fontWeight: 700, fontSize: 15 }} /></span>
+              <span>📞 <ContactAction value={contactPhone} type="phone" triggerStyle={{ color: "#fff", fontWeight: 700, fontSize: 15 }} /></span>
               <span>📍 {contactAddress}</span>
             </div>
           </div>
@@ -954,5 +970,73 @@ export default function Home() {
         </div>
       )}
     </div>
+  );
+}
+
+// Klikalny kontakt: po kliknięciu pokazuje menu „Kopiuj” + „Napisz e-mail” / „Zadzwoń”.
+// Dla telefonu link tel: zawiera tylko cyfry (to, co wpisuje się w komórce).
+function ContactAction({
+  value,
+  type,
+  triggerStyle,
+}: {
+  value: string;
+  type: "email" | "phone";
+  triggerStyle?: React.CSSProperties;
+}) {
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  if (!value || !value.trim()) return null;
+
+  const href = type === "email" ? `mailto:${value}` : `tel:${value.replace(/[^+\d]/g, "")}`;
+  const actionLabel = type === "email" ? "✉️ Napisz e-mail" : "📞 Zadzwoń";
+
+  function toggle() {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    const r = btnRef.current?.getBoundingClientRect();
+    if (r) setPos({ top: r.bottom + 8, left: Math.min(r.left, window.innerWidth - 232) });
+    setOpen(true);
+  }
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* schowek niedostępny — pomijamy */
+    }
+  }
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        onClick={toggle}
+        className="font-fredoka"
+        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", textDecoration: "underline", textUnderlineOffset: 3, ...triggerStyle }}
+      >
+        {value}
+      </button>
+      {open && pos && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 120 }} />
+          <div style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 121, background: "#fff", borderRadius: 14, boxShadow: "0 16px 40px rgba(8,40,64,0.3)", border: "1px solid #e3eef5", padding: 8, display: "flex", flexDirection: "column", gap: 4, minWidth: 210 }}>
+            <a href={href} onClick={() => setOpen(false)} className="as-contact-opt" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "#1b3a4b", fontWeight: 700, fontSize: 14, padding: "11px 12px", borderRadius: 10 }}>
+              {actionLabel}
+            </a>
+            <button onClick={copy} className="as-contact-opt" style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", cursor: "pointer", color: copied ? "#1f8a5b" : "#1b3a4b", fontWeight: 700, fontSize: 14, padding: "11px 12px", borderRadius: 10, textAlign: "left" }}>
+              {copied ? "✓ Skopiowano!" : "📋 Kopiuj"}
+            </button>
+          </div>
+        </>
+      )}
+    </>
   );
 }
