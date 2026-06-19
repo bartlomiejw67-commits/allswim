@@ -146,7 +146,7 @@ export default function Home() {
   const heroStat2Value = settings?.heroStat2Value || "2 baseny";
   const heroStat2Label = settings?.heroStat2Label || "w Tczewie";
 
-  const aboutEyebrow = settings?.aboutEyebrow || "O mnie";
+  const aboutEyebrow = settings?.aboutEyebrow || "O nas";
   const aboutTitle = settings?.aboutTitle || "Cześć, jestem Ola!";
   const aboutRole = settings?.aboutRole || "Trener i instruktor pływania • Ratownik wodny";
   const aboutBadge = settings?.aboutBadge || "🏅 Ratownik wodny";
@@ -466,7 +466,7 @@ export default function Home() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={aboutImageUrl} alt="Ola Laskowska" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
-                  <span style={{ fontFamily: "monospace", fontSize: 13, letterSpacing: "0.1em", color: "#7fa3bd", textAlign: "center" }}>ZDJĘCIE OLI<br /><span style={{ fontSize: 11, opacity: 0.75 }}>(wgrasz w panelu)</span></span>
+                  <span style={{ fontSize: 52, opacity: 0.55 }} aria-hidden>🏊‍♀️</span>
                 )}
               </div>
               <div className="font-fredoka" style={{ position: "absolute", bottom: -16, right: -16, background: C.orange, color: "#fff", borderRadius: 18, padding: "11px 18px", boxShadow: "0 14px 30px rgba(233,161,59,0.35)", fontWeight: 600, fontSize: 15 }}>{aboutBadge}</div>
@@ -591,8 +591,6 @@ export default function Home() {
             </div>
           </div>
         )}
-
-        <p className="as-reveal" style={{ textAlign: "center", fontSize: 13, color: "#9aabb5", marginTop: 18 }}>✏️ Ceny, zniżki i dane do płatności edytujesz w panelu administratora</p>
       </section>
 
       {/* ============ GALERIA ZAJĘĆ ============ */}

@@ -158,3 +158,20 @@ export const sendParticipantScheduleChanged = internalAction({
     await sendEmail({ to: args.to, subject: "Zmiana grafiku zajęć — ALL SWIM", html });
   },
 });
+
+// Do osoby z listy oczekujących: nabór został właśnie otwarty.
+export const sendWaitlistOpened = internalAction({
+  args: { to: v.string() },
+  handler: async (_ctx, args) => {
+    const site = process.env.SITE_URL;
+    const cta = site
+      ? `<p style="margin:18px 0 0"><a href="${site}/#nabor" style="background:#e9a13b;color:#fff;text-decoration:none;font-weight:700;border-radius:999px;padding:12px 22px;display:inline-block">Wypełnij zgłoszenie →</a></p>`
+      : "";
+    const html = layout(
+      "Nabór jest już otwarty! 🌊",
+      `<p style="margin:0;font-size:15px;line-height:1.6">Dobra wiadomość — w <strong>ALL SWIM</strong> ruszył nabór na zajęcia nauki pływania. Zapisałeś/aś się na liście powiadomień, więc dajemy znać jako pierwszym.</p>
+       <p style="margin:12px 0 0;font-size:15px;line-height:1.6">Liczba miejsc jest ograniczona — zachęcamy do szybkiego zgłoszenia dziecka.</p>${cta}`,
+    );
+    await sendEmail({ to: args.to, subject: "Nabór otwarty — ALL SWIM 🌊", html });
+  },
+});

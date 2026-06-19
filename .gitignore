@@ -29,3 +29,5 @@ Thumbs.db
 # pliki tymczasowe
 *.tmp
 keys.tmp.json
+
+.vercel

@@ -8,6 +8,9 @@ import { A, card, input, label, btnPrimary, btnDanger, btnSecondary, btnGhost } 
 
 const DAYS = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"];
 
+// Kolory rozróżniające baseny w grafiku zbiorczym.
+const POOL_COLORS = ["#6cb4e0", "#e9a13b", "#5cb98a", "#a07cd6", "#e0697f", "#3fa0a8"];
+
 type Pool = { _id: string; name: string };
 type RosterMember = { enrollmentId: string; name: string; childAge: string | null };
 type Group = {
@@ -59,6 +62,9 @@ export default function Page() {
           try { await setScheduleLive({ live: next }); } finally { setBusy(false); }
         }}>{live ? "Ukryj grafik" : "Pokaż grafik"}</button>
       </div>
+
+      {/* GRAFIK ZBIORCZY — podgląd całego tygodnia (tylko do odczytu) */}
+      <WeeklyOverview pools={pools} groups={groups} sessions={sessions} />
 
       {/* GRUPY + przydział basenu dla dzieci */}
       <h2 className="font-fredoka" style={{ fontSize: 20, color: A.navy, margin: "0 0 12px" }}>Grupy i uczestnicy</h2>
@@ -207,6 +213,102 @@ function SessionChip({ session, groupName, attendees }: { session: Session; grou
           try { await deleteSession({ id: session._id as Id<"scheduleEntries"> }); } catch (e) { alert((e as { data?: string }).data ?? "Błąd."); } finally { setBusy(false); }
         }}>Usuń</button>
       </div>
+    </div>
+  );
+}
+
+// --- Grafik zbiorczy: podgląd całego tygodnia, rozróżnienie basenów + filtr instruktora ---
+function WeeklyOverview({ pools, groups, sessions }: { pools: Pool[]; groups: Group[]; sessions: Session[] }) {
+  const [instr, setInstr] = useState<string>("all");
+
+  const groupById = (id: string) => groups.find((g) => g._id === id);
+  const poolById = (id: string) => pools.find((p) => p._id === id);
+  const poolColor = (id: string) => {
+    const idx = pools.findIndex((p) => p._id === id);
+    return POOL_COLORS[(idx < 0 ? 0 : idx) % POOL_COLORS.length];
+  };
+
+  // Lista instruktorów zebrana z grup (tylko te z przypisanym instruktorem).
+  const instructors = Array.from(
+    new Set(groups.map((g) => (g.instructor ?? "").trim()).filter((x) => x !== "")),
+  ).sort((a, b) => a.localeCompare(b, "pl"));
+
+  const visible = sessions.filter((s) => {
+    if (instr === "all") return true;
+    return (groupById(s.groupId)?.instructor ?? "").trim() === instr;
+  });
+
+  return (
+    <div style={{ ...card, marginBottom: 26 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14 }}>
+        <div>
+          <h2 className="font-fredoka" style={{ fontSize: 20, color: A.navy, margin: 0 }}>Grafik zbiorczy (podgląd)</h2>
+          <p style={{ color: A.grey, fontSize: 13, margin: "2px 0 0", maxWidth: 620 }}>
+            Zestawienie wszystkich zajęć w tygodniu — <strong>tylko do odczytu</strong>. Terminy dodajesz i edytujesz niżej, w siatkach basenów.
+          </p>
+        </div>
+        {instructors.length > 0 && (
+          <div>
+            <label style={label}>Pokaż grafik dla</label>
+            <select value={instr} onChange={(e) => setInstr(e.target.value)} style={{ ...input, minWidth: 230 }}>
+              <option value="all">Wszyscy instruktorzy (łącznie)</option>
+              {instructors.map((i) => <option key={i} value={i}>{i}</option>)}
+            </select>
+          </div>
+        )}
+      </div>
+
+      {/* Legenda basenów */}
+      {pools.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 12 }}>
+          {pools.map((p) => (
+            <span key={p._id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: A.navy }}>
+              <span style={{ width: 12, height: 12, borderRadius: 4, background: poolColor(p._id), display: "inline-block" }} /> {p.name}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {visible.length === 0 ? (
+        <div style={{ color: A.grey, fontSize: 14, padding: "8px 2px" }}>
+          {instr === "all"
+            ? "Brak dodanych terminów. Dodaj zajęcia w siatkach basenów poniżej."
+            : "Ten instruktor nie ma jeszcze żadnych zajęć w grafiku."}
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7,minmax(150px,1fr))", gap: 8, overflowX: "auto" }}>
+          {DAYS.map((d, i) => {
+            const daySessions = visible
+              .filter((s) => s.dayOfWeek === i)
+              .sort((a, b) => a.startTime.localeCompare(b.startTime));
+            return (
+              <div key={i} style={{ background: "#f8fcff", borderRadius: 12, border: "1px solid #eaf2f8", overflow: "hidden", minWidth: 150 }}>
+                <div className="font-fredoka" style={{ background: A.navy, color: "#fff", fontWeight: 600, fontSize: 13, padding: "7px 10px" }}>{d}</div>
+                <div style={{ padding: 7, display: "flex", flexDirection: "column", gap: 7 }}>
+                  {daySessions.length === 0 && <div style={{ color: "#9aabb5", fontSize: 12, padding: "4px 2px" }}>—</div>}
+                  {daySessions.map((s) => {
+                    const g = groupById(s.groupId);
+                    const color = poolColor(s.poolId);
+                    return (
+                      <div key={s._id} style={{ borderRadius: 10, padding: "7px 8px", background: "#fff", border: "1px solid #eaf2f8", borderLeft: `4px solid ${color}` }}>
+                        <div style={{ fontVariantNumeric: "tabular-nums", fontWeight: 800, fontSize: 12, color: A.navy }}>{s.startTime}–{s.endTime}</div>
+                        <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 13, color: "#1b3a4b", marginTop: 1 }}>{g?.name ?? "?"}</div>
+                        <div style={{ fontSize: 11, color: A.grey, marginTop: 3, display: "flex", alignItems: "center", gap: 5 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: 3, background: color, display: "inline-block", flex: "none" }} />
+                          {poolById(s.poolId)?.name ?? "?"}
+                        </div>
+                        {g?.instructor && instr === "all" && (
+                          <div style={{ fontSize: 11, color: A.grey, marginTop: 2 }}>👤 {g.instructor}</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

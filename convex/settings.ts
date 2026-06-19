@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import { requireAdmin } from "./lib";
 
 // Publiczny odczyt ustawień strony (zwraca null, jeśli jeszcze nie ustawione).
@@ -129,13 +130,29 @@ export const update = mutation({
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
     const existing = (await ctx.db.query("siteSettings").take(1))[0];
+    const wasOpen = existing?.recruitmentOpen ?? false;
+    const willOpen = args.recruitmentOpen ?? wasOpen;
+
+    let settingsId;
     if (existing) {
       await ctx.db.patch("siteSettings", existing._id, args);
-      return existing._id;
+      settingsId = existing._id;
+    } else {
+      settingsId = await ctx.db.insert("siteSettings", {
+        recruitmentOpen: args.recruitmentOpen ?? false,
+        ...args,
+      });
     }
-    return await ctx.db.insert("siteSettings", {
-      recruitmentOpen: args.recruitmentOpen ?? false,
-      ...args,
-    });
+
+    // Nabór właśnie się otworzył (false → true) → powiadom osoby z listy oczekujących.
+    if (!wasOpen && willOpen) {
+      const waiting = (await ctx.db.query("waitlist").take(500)).filter((w) => !w.notified);
+      for (const w of waiting) {
+        await ctx.scheduler.runAfter(0, internal.emails.sendWaitlistOpened, { to: w.email });
+        await ctx.db.patch("waitlist", w._id, { notified: true });
+      }
+    }
+
+    return settingsId;
   },
 });

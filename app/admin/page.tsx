@@ -20,6 +20,7 @@ export default function AdminEnrollments() {
   const groups = useQuery(api.groups.list);
   const decide = useMutation(api.enrollments.decide);
   const remove = useMutation(api.enrollments.remove);
+  const unassign = useMutation(api.enrollments.unassign);
 
   const [groupChoice, setGroupChoice] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -51,6 +52,18 @@ export default function AdminEnrollments() {
     }
   }
 
+  async function undo(id: string) {
+    if (!confirm("Cofnąć decyzję i przywrócić zgłoszenie do oczekujących? Przydział grupy zostanie zdjęty.")) return;
+    setBusy(id);
+    try {
+      await unassign({ id: id as Id<"enrollments"> });
+    } catch (e) {
+      alert((e as { data?: string }).data ?? "Nie udało się cofnąć.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function del(id: string) {
     if (!confirm("Usunąć to zgłoszenie na stałe?")) return;
     setBusy(id);
@@ -71,7 +84,7 @@ export default function AdminEnrollments() {
   return (
     <div>
       <h1 className="font-fredoka" style={{ fontSize: 28, color: A.navy, margin: "0 0 4px" }}>Zgłoszenia naboru</h1>
-      <p style={{ color: A.grey, fontSize: 14, margin: "0 0 20px" }}>Osoby kontynuujące są wyżej na liście. Zaakceptuj i przydziel do grupy lub odrzuć.</p>
+      <p style={{ color: A.grey, fontSize: 14, margin: "0 0 20px" }}>Osoby kontynuujące są wyżej na liście. Zaakceptuj i przydziel do grupy lub odrzuć. Pomyłka? Użyj <strong>„↩ Cofnij decyzję”</strong>, aby przywrócić zgłoszenie do oczekujących.</p>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
         {tabs.map((t) => (
@@ -128,6 +141,9 @@ export default function AdminEnrollments() {
                         <button disabled={busy === e._id} style={btnGhost} onClick={() => reject(e._id)}>Odrzuć</button>
                       </div>
                     </>
+                  )}
+                  {e.status !== "pending" && (
+                    <button disabled={busy === e._id} style={btnGhost} onClick={() => undo(e._id)}>↩ Cofnij decyzję</button>
                   )}
                   <button disabled={busy === e._id} style={btnDanger} onClick={() => del(e._id)}>Usuń</button>
                 </div>
