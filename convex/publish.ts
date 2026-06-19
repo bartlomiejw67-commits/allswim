@@ -47,9 +47,9 @@ async function computeChange(
   } else if (e.status === "approved" && e.assignedGroupId) {
     const sameAssignment = pubStatus === "approved" && !groupChanged;
     if (!sameAssignment) {
-      // Nowy/zmieniony przydział — ale powiadamiamy dopiero, gdy grupa ma terminy
-      // (inaczej rodzic dostałby mail bez godzin, a potem drugi „zmiana grafiku").
-      category = sig.hash === "" ? null : "assigned";
+      // Nowy/zmieniony przydział — powiadamiamy od razu po akceptacji (nawet bez
+      // ustalonych godzin). Gdy później dodasz terminy, rodzic dostanie „zmianę grafiku”.
+      category = "assigned";
     } else if (timesChanged) {
       category = "scheduleChanged";
     }
