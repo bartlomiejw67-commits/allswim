@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   description:
     "ALL SWIM – szkółka pływacka prowadzona przez Olę. Cierpliwa, bezpieczna nauka pływania dla dzieci. Małe grupy, dwa baseny w Tczewie.",
   icons: { icon: "/logo.png", apple: "/logo.png" },
+  // PRZED STARTEM: strona ukryta przed wyszukiwarkami. Usuń przy publikacji.
+  robots: { index: false, follow: false },
   openGraph: {
     title: "ALL SWIM – nauka pływania dla dzieci",
     description:
