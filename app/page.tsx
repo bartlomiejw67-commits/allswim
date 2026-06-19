@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 
@@ -112,6 +113,7 @@ export default function Home() {
   // --- Dane z Convex (fallback na treści z makiety) ---
   const settings = useQuery(api.settings.get);
   const me = useQuery(api.users.me); // undefined=ładowanie, null=niezalogowany, obiekt=zalogowany
+  const { signOut } = useAuthActions();
   const account = me
     ? me.role === "admin"
       ? { label: "Panel admina", href: "/admin" }
@@ -310,6 +312,11 @@ export default function Home() {
             <a href={account.href} className="font-fredoka as-login-desktop as-nav-link" style={{ fontWeight: 700, fontSize: 15, color: "#1b3a4b", borderRadius: 999, padding: "9px 16px", textDecoration: "none" }}>
               {account.label}
             </a>
+            {me && (
+              <button onClick={() => signOut()} className="font-fredoka as-login-desktop as-nav-link" style={{ fontWeight: 700, fontSize: 15, color: "#b4232a", background: "#fdeaea", border: "none", borderRadius: 999, padding: "9px 16px", cursor: "pointer" }}>
+                Wyloguj
+              </button>
+            )}
             <button onClick={() => go("nabor")} className="font-fredoka as-btn-primary" style={{ fontWeight: 600, fontSize: 15, color: "#fff", background: C.orange, border: "none", borderRadius: 999, padding: "11px 22px", cursor: "pointer", boxShadow: "0 8px 18px rgba(233,161,59,0.32)" }}>
               Zapisz się
             </button>
@@ -329,6 +336,11 @@ export default function Home() {
               <a href={account.href} style={{ textDecoration: "none", color: "#0f5b8f", fontWeight: 800, fontSize: 16, padding: "11px 12px", borderRadius: 12, borderTop: "1px solid #eef3f6", marginTop: 4 }}>
                 {account.label}
               </a>
+              {me && (
+                <button onClick={async () => { setMobileOpen(false); await signOut(); }} style={{ textAlign: "left", textDecoration: "none", color: "#b4232a", fontWeight: 800, fontSize: 16, padding: "11px 12px", borderRadius: 12, background: "none", border: "none", cursor: "pointer" }}>
+                  Wyloguj
+                </button>
+              )}
             </div>
           </div>
         )}
