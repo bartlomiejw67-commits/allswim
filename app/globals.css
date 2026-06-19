@@ -82,6 +82,12 @@ img { max-width: 100%; }
 
 .as-pill { transition: all .15s; cursor: pointer; }
 
+/* ===== Galeria: siatka responsywna (2 kafelki w rzędzie na telefonie) ===== */
+.as-gallery-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+@media (max-width: 600px) {
+  .as-gallery-grid { grid-template-columns: 1fr 1fr; }
+}
+
 /* ===== Hero: układ slogan / bańka / reszta ===== */
 .as-hero-grid {
   grid-template-columns: 1.08fr 0.92fr;

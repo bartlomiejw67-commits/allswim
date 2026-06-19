@@ -214,6 +214,8 @@ export default defineSchema({
     youtubeUrl: v.optional(v.string()),
     // Regulamin do pobrania (PDF w Convex storage):
     regulationsPdfId: v.optional(v.id("_storage")),
+    // Oferta obozów do pobrania (PDF w Convex storage) — przycisk znika, gdy brak pliku:
+    campsOfferPdfId: v.optional(v.id("_storage")),
     // Zdjęcie do sekcji „O mnie" (w Convex storage):
     aboutImageId: v.optional(v.id("_storage")),
   }),

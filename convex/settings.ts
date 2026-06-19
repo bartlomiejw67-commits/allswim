@@ -15,7 +15,10 @@ export const get = query({
     const aboutImageUrl = row.aboutImageId
       ? await ctx.storage.getUrl(row.aboutImageId)
       : null;
-    return { ...row, regulationsPdfUrl, aboutImageUrl };
+    const campsOfferPdfUrl = row.campsOfferPdfId
+      ? await ctx.storage.getUrl(row.campsOfferPdfId)
+      : null;
+    return { ...row, regulationsPdfUrl, aboutImageUrl, campsOfferPdfUrl };
   },
 });
 
@@ -66,6 +69,23 @@ export const setRegulationsPdf = mutation({
       await ctx.db.patch("siteSettings", existing._id, { regulationsPdfId: storageId });
     } else {
       await ctx.db.insert("siteSettings", { recruitmentOpen: false, regulationsPdfId: storageId });
+    }
+  },
+});
+
+// Admin: ustawienie/usunięcie PDF z ofertą obozów (pomiń storageId, by usunąć/ukryć przycisk).
+export const setCampsOfferPdf = mutation({
+  args: { storageId: v.optional(v.id("_storage")) },
+  handler: async (ctx, { storageId }) => {
+    await requireAdmin(ctx);
+    const existing = (await ctx.db.query("siteSettings").take(1))[0];
+    if (existing) {
+      if (existing.campsOfferPdfId && existing.campsOfferPdfId !== storageId) {
+        await ctx.storage.delete(existing.campsOfferPdfId);
+      }
+      await ctx.db.patch("siteSettings", existing._id, { campsOfferPdfId: storageId });
+    } else {
+      await ctx.db.insert("siteSettings", { recruitmentOpen: false, campsOfferPdfId: storageId });
     }
   },
 });

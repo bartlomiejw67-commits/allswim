@@ -138,6 +138,7 @@ export default function Home() {
   const instagramUrl = settings?.instagramUrl || "#";
   const facebookUrl = settings?.facebookUrl || "#";
   const regulationsPdfUrl = settings?.regulationsPdfUrl ?? null;
+  const campsOfferPdfUrl = settings?.campsOfferPdfUrl ?? null;
 
   const heroEyebrow = settings?.heroEyebrow || "Szkółka pływacka · Tczew";
   const heroLine1 = settings?.heroLine1 || "Pierwszy ruch w wodzie";
@@ -148,7 +149,7 @@ export default function Home() {
   const heroStat2Value = settings?.heroStat2Value || "2 baseny";
   const heroStat2Label = settings?.heroStat2Label || "w Tczewie";
 
-  const aboutEyebrow = settings?.aboutEyebrow || "O nas";
+  const aboutEyebrow = settings?.aboutEyebrow || "Poznaj instruktorkę";
   const aboutTitle = settings?.aboutTitle || "Cześć, jestem Ola!";
   const aboutRole = settings?.aboutRole || "Trener i instruktor pływania • Ratownik wodny";
   const aboutBadge = settings?.aboutBadge || "🏅 Ratownik wodny";
@@ -618,7 +619,7 @@ export default function Home() {
             </button>
           )}
         </div>
-        <div className="as-reveal" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16 }}>
+        <div className="as-reveal as-gallery-grid" style={{ display: "grid", gap: 16 }}>
           {visibleGallery.map((item, i) => (
             <button key={i} onClick={() => setLightbox({ items: galleryItems, index: i })} className="as-gallery-item" style={{ border: "none", padding: 0, cursor: "pointer", borderRadius: 20, overflow: "hidden", aspectRatio: "4/3", position: "relative", boxShadow: "0 8px 20px rgba(15,91,143,0.08)" }}>
               {item.url ? (
@@ -645,6 +646,11 @@ export default function Home() {
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,210,122,0.18)", borderRadius: 999, padding: "7px 15px", fontWeight: 800, fontSize: 14, color: "#ffd27a" }}>{campsBadge}</div>
             <h2 className="font-fredoka" style={{ fontWeight: 700, fontSize: "clamp(28px,4vw,42px)", margin: "16px 0 0" }}>{campsTitle}</h2>
             <p style={{ fontSize: 17, lineHeight: 1.6, color: "#cfe6f5", margin: "16px 0 0" }}>{campsDescription}</p>
+            {campsOfferPdfUrl && (
+              <a href={campsOfferPdfUrl} target="_blank" rel="noreferrer" className="font-fredoka" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 22, fontWeight: 700, fontSize: 15, color: "#0f5b8f", background: "#ffd27a", borderRadius: 999, padding: "13px 28px", textDecoration: "none", boxShadow: "0 10px 24px rgba(0,0,0,0.28)" }}>
+                ⬇ Pobierz ofertę obozów (PDF)
+              </a>
+            )}
           </div>
 
           {/* Aktualności — planowane turnusy (lub komunikat o braku) */}
@@ -682,7 +688,7 @@ export default function Home() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               {flagship.map((item, i) => (
-                <button key={i} onClick={() => { if (item.url) setLightbox({ items: campPhotoItems, index: i }); }} className={item.url ? "as-gallery-item" : undefined} style={{ border: "none", padding: 0, cursor: item.url ? "pointer" : "default", borderRadius: 20, overflow: "hidden", aspectRatio: "16/10", position: "relative", boxShadow: "0 10px 24px rgba(0,0,0,0.25)" }}>
+                <button key={i} onClick={() => { if (item.url) setLightbox({ items: campPhotoItems, index: i }); }} className={item.url ? "as-gallery-item" : undefined} style={{ border: "none", padding: 0, cursor: item.url ? "pointer" : "default", borderRadius: 20, overflow: "hidden", aspectRatio: "4/3", position: "relative", boxShadow: "0 10px 24px rgba(0,0,0,0.25)" }}>
                   {item.url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={item.url} alt={item.label} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
@@ -691,7 +697,10 @@ export default function Home() {
                       <span style={{ fontFamily: "monospace", fontSize: 12, color: "rgba(255,255,255,0.7)" }}>{item.label}</span>
                     </div>
                   )}
-                  {item.url && <span style={{ position: "absolute", right: 12, bottom: 12, width: 32, height: 32, borderRadius: "50%", background: "rgba(15,91,143,0.9)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⤢</span>}
+                  {item.url && item.label && (
+                    <span className="font-fredoka" style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "26px 14px 12px", textAlign: "left", fontWeight: 700, fontSize: 14, color: "#fff", background: "linear-gradient(transparent, rgba(8,40,64,0.82))", textShadow: "0 1px 4px rgba(0,0,0,0.4)" }}>{item.label}</span>
+                  )}
+                  {item.url && <span style={{ position: "absolute", right: 12, top: 12, width: 32, height: 32, borderRadius: "50%", background: "rgba(15,91,143,0.9)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⤢</span>}
                 </button>
               ))}
             </div>
@@ -929,14 +938,17 @@ export default function Home() {
           <button onClick={() => setLightbox(null)} style={{ position: "absolute", top: 22, right: 24, width: 48, height: 48, borderRadius: "50%", border: "none", background: "rgba(255,255,255,0.16)", color: "#fff", fontSize: 24, cursor: "pointer" }}>✕</button>
           <button onClick={(e) => { e.stopPropagation(); setLightbox({ items: lightbox.items, index: (lightbox.index - 1 + lightbox.items.length) % lightbox.items.length }); }} style={{ position: "absolute", left: 24, top: "50%", transform: "translateY(-50%)", width: 52, height: 52, borderRadius: "50%", border: "none", background: "rgba(255,255,255,0.16)", color: "#fff", fontSize: 24, cursor: "pointer" }}>‹</button>
           <button onClick={(e) => { e.stopPropagation(); setLightbox({ items: lightbox.items, index: (lightbox.index + 1) % lightbox.items.length }); }} style={{ position: "absolute", right: 24, top: "50%", transform: "translateY(-50%)", width: 52, height: 52, borderRadius: "50%", border: "none", background: "rgba(255,255,255,0.16)", color: "#fff", fontSize: 24, cursor: "pointer" }}>›</button>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "min(900px,92vw)", maxHeight: "85vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "min(900px,92vw)", maxHeight: "85vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14 }}>
             {lightbox.items[lightbox.index].url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={lightbox.items[lightbox.index].url!} alt={lightbox.items[lightbox.index].label} style={{ maxWidth: "100%", maxHeight: "85vh", borderRadius: 18, boxShadow: "0 30px 70px rgba(0,0,0,0.5)", objectFit: "contain" }} />
+              <img src={lightbox.items[lightbox.index].url!} alt={lightbox.items[lightbox.index].label} style={{ maxWidth: "100%", maxHeight: "80vh", borderRadius: 18, boxShadow: "0 30px 70px rgba(0,0,0,0.5)", objectFit: "contain" }} />
             ) : (
               <div style={{ width: "min(820px,90vw)", aspectRatio: "4/3", borderRadius: 24, boxShadow: "0 30px 70px rgba(0,0,0,0.5)", background: "repeating-linear-gradient(135deg,#d3e7f5,#d3e7f5 22px,#e8f4fb 22px,#e8f4fb 44px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <span style={{ fontFamily: "monospace", fontSize: 16, color: "#5a8bab", letterSpacing: "0.08em" }}>{lightbox.items[lightbox.index].label}</span>
               </div>
+            )}
+            {lightbox.items[lightbox.index].url && lightbox.items[lightbox.index].label && (
+              <div className="font-fredoka" style={{ color: "#fff", fontSize: 16, fontWeight: 700, textAlign: "center", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>{lightbox.items[lightbox.index].label}</div>
             )}
           </div>
         </div>
