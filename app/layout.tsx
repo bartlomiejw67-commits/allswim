@@ -3,9 +3,28 @@ import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  // TODO: ustawić właściwą domenę po wdrożeniu na Vercel (dla poprawnych linków OG).
+  metadataBase: new URL("https://allswim.pl"),
   title: "ALL SWIM – nauka pływania dla dzieci",
   description:
-    "ALL SWIM – szkółka pływacka prowadzona przez Olę. Cierpliwa, bezpieczna nauka pływania dla dzieci. Małe grupy, dwa baseny.",
+    "ALL SWIM – szkółka pływacka prowadzona przez Olę. Cierpliwa, bezpieczna nauka pływania dla dzieci. Małe grupy, dwa baseny w Tczewie.",
+  icons: { icon: "/logo.png", apple: "/logo.png" },
+  openGraph: {
+    title: "ALL SWIM – nauka pływania dla dzieci",
+    description:
+      "Cierpliwa, bezpieczna nauka pływania dla dzieci. Małe grupy, dwa baseny w Tczewie.",
+    url: "/",
+    siteName: "ALL SWIM",
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "ALL SWIM" }],
+    locale: "pl_PL",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "ALL SWIM – nauka pływania dla dzieci",
+    description: "Nauka pływania dla dzieci · Tczew",
+    images: ["/logo.png"],
+  },
 };
 
 export default function RootLayout({

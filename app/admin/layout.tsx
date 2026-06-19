@@ -7,6 +7,7 @@ import { useConvexAuth, useQuery, useMutation } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "@/convex/_generated/api";
 import { A, ADMIN_NAV, btnPrimary, btnGhost } from "@/components/admin/ui";
+import PublishBar from "@/components/admin/PublishBar";
 
 function Center({ children }: { children: ReactNode }) {
   return (
@@ -97,7 +98,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <button style={{ ...btnGhost, width: "100%", marginTop: 8 }} onClick={async () => { await signOut(); router.push("/"); }}>Wyloguj ({me.email})</button>
         </div>
       </aside>
-      <main style={{ flex: 1, padding: "28px 32px", maxWidth: 1100 }}>{children}</main>
+      <main style={{ flex: 1, padding: "28px 32px", maxWidth: 1100 }}>
+        <PublishBar />
+        {children}
+      </main>
     </div>
   );
 }

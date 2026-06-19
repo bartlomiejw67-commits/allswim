@@ -26,18 +26,6 @@ const NAV = [
   { label: "Kontakt", href: "#kontakt" },
 ];
 
-const SCHEDULE = [
-  { day: "Poniedziałek", time: "16:00", group: "Oswajanie z wodą", pool: "Basen CSiR", instructor: "Ola Laskowska" },
-  { day: "Poniedziałek", time: "17:00", group: "Średni", pool: "Basen CSiR", instructor: "Ola Laskowska" },
-  { day: "Wtorek", time: "16:30", group: "Początkujący", pool: "Pływalnia miejska", instructor: "Ola Laskowska" },
-  { day: "Środa", time: "17:00", group: "Zaawansowany", pool: "Basen CSiR", instructor: "Ola Laskowska" },
-  { day: "Czwartek", time: "16:00", group: "Średni", pool: "Pływalnia miejska", instructor: "Ola Laskowska" },
-  { day: "Piątek", time: "17:30", group: "Początkujący", pool: "Basen CSiR", instructor: "Ola Laskowska" },
-  { day: "Sobota", time: "10:00", group: "Zaawansowany", pool: "Pływalnia miejska", instructor: "Ola Laskowska" },
-  { day: "Sobota", time: "11:00", group: "Początkujący", pool: "Pływalnia miejska", instructor: "Ola Laskowska" },
-];
-const POOLS = ["Basen CSiR", "Pływalnia miejska"];
-
 const PRICES = [
   { name: "Karnet miesięczny", price: "320 zł", unit: "/ mies.", popular: false, border: "#eaf2f8", desc: "4 zajęcia w miesiącu (1×/tydz.), jedna grupa i basen." },
   { name: "Karnet 2× w tygodniu", price: "560 zł", unit: "/ mies.", popular: true, border: "#6cb4e0", desc: "8 zajęć w miesiącu — najszybsze postępy. Wybór dwóch terminów." },
@@ -111,9 +99,15 @@ export default function Home() {
   const [fEmail, setFEmail] = useState("");
   const [fPhone, setFPhone] = useState("");
   const [fNote, setFNote] = useState("");
+  const [fConsent, setFConsent] = useState(false);
+  const [fHp, setFHp] = useState(""); // honeypot — ukryte pole na boty
   const [sent, setSent] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Lista oczekujących ("Powiadom mnie" przy zamkniętym naborze)
+  const [waitEmail, setWaitEmail] = useState("");
+  const [waitSent, setWaitSent] = useState(false);
+  const [waitBusy, setWaitBusy] = useState(false);
 
   // --- Dane z Convex (fallback na treści z makiety) ---
   const settings = useQuery(api.settings.get);
@@ -132,6 +126,7 @@ export default function Home() {
   const campImages = useQuery(api.images.list, { category: "camps" });
   const campsData = useQuery(api.camps.list);
   const submitEnroll = useMutation(api.enrollments.submit);
+  const joinWaitlist = useMutation(api.waitlist.join);
 
   const naborActive = settings?.recruitmentOpen ?? true;
   const naborInfo = settings?.recruitmentInfo || "Wolne miejsca w grupach początkujących i średnich · zapisy do 15 września";
@@ -155,6 +150,7 @@ export default function Home() {
   const aboutTitle = settings?.aboutTitle || "Cześć, jestem Ola!";
   const aboutRole = settings?.aboutRole || "Trener i instruktor pływania • Ratownik wodny";
   const aboutBadge = settings?.aboutBadge || "🏅 Ratownik wodny";
+  const aboutImageUrl = settings?.aboutImageUrl ?? null;
 
   const gridEyebrow = settings?.gridEyebrow || "Grafik zajęć";
   const gridTitle = settings?.gridTitle || "Sprawdź terminy na basenach";
@@ -193,20 +189,19 @@ export default function Home() {
         "Moim celem jest pomóc dzieciom przełamać barierę przed wodą, oswoić się z nią oraz rozwinąć sprawność ruchową i zdolności motoryczne – w atmosferze radości i wzajemnego zaufania.",
       ];
 
-  const poolsView = poolsData && poolsData.length ? poolsData.map((p) => p.name) : POOLS;
+  const poolsView = poolsData && poolsData.length ? poolsData.map((p) => p.name) : [];
 
-  const scheduleAll =
-    scheduleData && scheduleData.length
-      ? scheduleData.map((r) => ({
-          day: DAY_NAMES[r.dayOfWeek] || "",
-          dayIdx: r.dayOfWeek,
-          time: r.startTime,
-          group: r.groupName || r.levelName || "",
-          pool: r.poolName || "",
-          instructor: r.instructor || "",
-        }))
-      : SCHEDULE.map((r) => ({ ...r, dayIdx: DAY_NAMES.indexOf(r.day) }));
+  // Grafik pochodzi wyłącznie z panelu (widoczny dopiero po publikacji). Brak danych = grafik jeszcze nieopublikowany.
+  const scheduleAll = (scheduleData ?? []).map((r) => ({
+    day: DAY_NAMES[r.dayOfWeek] || "",
+    dayIdx: r.dayOfWeek,
+    time: r.startTime,
+    group: r.groupName || "",
+    pool: r.poolName || "",
+    instructor: r.instructor || "",
+  }));
   scheduleAll.sort((a, b) => a.dayIdx - b.dayIdx || a.time.localeCompare(b.time));
+  const hasSchedule = scheduleAll.length > 0;
 
   const pricesView =
     pricesData && pricesData.length
@@ -235,6 +230,10 @@ export default function Home() {
       setFormError("Podaj imię dziecka, e-mail i numer telefonu.");
       return;
     }
+    if (!fConsent) {
+      setFormError("Zaznacz zgodę na przetwarzanie danych, aby wysłać zgłoszenie.");
+      return;
+    }
     setSubmitting(true);
     try {
       await submitEnroll({
@@ -245,6 +244,8 @@ export default function Home() {
         levelId: fLevel ? (fLevel as Id<"levels">) : undefined,
         isContinuing: fCont === "tak",
         note: fNote.trim() || undefined,
+        consent: fConsent,
+        hp: fHp,
       });
       setSent(true);
     } catch (e) {
@@ -252,6 +253,20 @@ export default function Home() {
       setFormError(msg.data || msg.message || "Nie udało się wysłać zgłoszenia. Spróbuj ponownie.");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleWaitlist() {
+    if (!waitEmail.trim()) return;
+    setWaitBusy(true);
+    try {
+      await joinWaitlist({ email: waitEmail.trim() });
+      setWaitSent(true);
+      setWaitEmail("");
+    } catch (e) {
+      alert((e as { data?: string }).data ?? "Nie udało się zapisać.");
+    } finally {
+      setWaitBusy(false);
     }
   }
 
@@ -416,9 +431,24 @@ export default function Home() {
                   <div style={{ fontSize: 15, color: C.grey }}>Zapisz się na listę powiadomień — damy znać, gdy ruszą kolejne zapisy.</div>
                 </div>
               </div>
-              <button className="font-fredoka as-btn-secondary" style={{ fontWeight: 600, fontSize: 16, color: C.navy, background: "#fff", border: "2px solid #6cb4e0", borderRadius: 999, padding: "11px 24px", cursor: "pointer" }}>
-                Powiadom mnie
-              </button>
+              {waitSent ? (
+                <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 15, color: "#1f8a5b", background: "#e8f7ee", borderRadius: 999, padding: "11px 20px" }}>✓ Dzięki! Damy znać mailowo.</div>
+              ) : (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <input
+                    type="email"
+                    value={waitEmail}
+                    onChange={(e) => setWaitEmail(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleWaitlist(); }}
+                    placeholder="Twój e-mail"
+                    className="as-input"
+                    style={{ fontSize: 15, padding: "11px 16px", borderRadius: 999, border: "2px solid #e3eef5", background: "#f8fcff", color: "#1b3a4b", minWidth: 200 }}
+                  />
+                  <button onClick={handleWaitlist} disabled={waitBusy} className="font-fredoka as-btn-secondary" style={{ fontWeight: 600, fontSize: 16, color: C.navy, background: "#fff", border: "2px solid #6cb4e0", borderRadius: 999, padding: "11px 24px", cursor: waitBusy ? "default" : "pointer" }}>
+                    {waitBusy ? "Zapisywanie…" : "Powiadom mnie"}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -429,8 +459,13 @@ export default function Home() {
         <div className="as-reveal" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 48, alignItems: "center" }}>
           <div style={{ display: "flex", justifyContent: "center" }}>
             <div style={{ position: "relative", width: "min(380px,92%)", aspectRatio: "4/5" }}>
-              <div style={{ position: "absolute", inset: 0, borderRadius: 28, background: "repeating-linear-gradient(135deg,#dbecf8,#dbecf8 16px,#eaf4fb 16px,#eaf4fb 32px)", border: "1px solid #d6e7f2", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 20px 44px rgba(15,91,143,0.12)" }}>
-                <span style={{ fontFamily: "monospace", fontSize: 13, letterSpacing: "0.1em", color: "#7fa3bd", textAlign: "center" }}>ZDJĘCIE OLI<br /><span style={{ fontSize: 11, opacity: 0.75 }}>(wgrasz później)</span></span>
+              <div style={{ position: "absolute", inset: 0, borderRadius: 28, overflow: "hidden", background: aboutImageUrl ? "#eaf4fb" : "repeating-linear-gradient(135deg,#dbecf8,#dbecf8 16px,#eaf4fb 16px,#eaf4fb 32px)", border: "1px solid #d6e7f2", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 20px 44px rgba(15,91,143,0.12)" }}>
+                {aboutImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={aboutImageUrl} alt="Ola Laskowska" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <span style={{ fontFamily: "monospace", fontSize: 13, letterSpacing: "0.1em", color: "#7fa3bd", textAlign: "center" }}>ZDJĘCIE OLI<br /><span style={{ fontSize: 11, opacity: 0.75 }}>(wgrasz w panelu)</span></span>
+                )}
               </div>
               <div className="font-fredoka" style={{ position: "absolute", bottom: -16, right: -16, background: C.orange, color: "#fff", borderRadius: 18, padding: "11px 18px", boxShadow: "0 14px 30px rgba(233,161,59,0.35)", fontWeight: 600, fontSize: 15 }}>{aboutBadge}</div>
             </div>
@@ -455,43 +490,52 @@ export default function Home() {
             <div className="font-fredoka" style={eyebrow}>{gridEyebrow}</div>
             <h2 className="font-fredoka" style={h2style}>{gridTitle}</h2>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: C.grey, marginRight: 4 }}>Basen:</span>
-            {[{ key: "all", label: "Wszystkie" }, ...poolsView.map((p) => ({ key: p, label: p }))].map((p) => {
-              const active = poolFilter === p.key;
-              return (
-                <button key={p.key} onClick={() => setPoolFilter(p.key)} className="as-pill" style={{ fontWeight: 800, fontSize: 14, borderRadius: 999, padding: "9px 18px", border: `2px solid ${active ? C.orange : "#d6e7f2"}`, background: active ? C.orange : "#fff", color: active ? "#fff" : C.navy }}>
-                  {p.label}
-                </button>
-              );
-            })}
-          </div>
+          {hasSchedule && poolsView.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: C.grey, marginRight: 4 }}>Basen:</span>
+              {[{ key: "all", label: "Wszystkie" }, ...poolsView.map((p) => ({ key: p, label: p }))].map((p) => {
+                const active = poolFilter === p.key;
+                return (
+                  <button key={p.key} onClick={() => setPoolFilter(p.key)} className="as-pill" style={{ fontWeight: 800, fontSize: 14, borderRadius: 999, padding: "9px 18px", border: `2px solid ${active ? C.orange : "#d6e7f2"}`, background: active ? C.orange : "#fff", color: active ? "#fff" : C.navy }}>
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
-        <div className="as-reveal" style={{ background: "#fff", borderRadius: 24, boxShadow: "0 10px 28px rgba(15,91,143,0.08)", border: "1px solid #eaf2f8", overflow: "hidden" }}>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 680 }}>
-              <thead>
-                <tr style={{ background: C.navy, color: "#fff", textAlign: "left" }}>
-                  {["Dzień", "Godzina", "Grupa / poziom", "Basen", "Instruktor"].map((th) => (
-                    <th key={th} className="font-fredoka" style={{ padding: "16px 20px", fontWeight: 600, fontSize: 14 }}>{th}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {scheduleRows.map((r, i) => (
-                  <tr key={i} className="as-row" style={{ borderTop: "1px solid #eef4f8" }}>
-                    <td style={{ padding: "15px 20px", fontWeight: 800, color: "#1b3a4b" }}>{r.day}</td>
-                    <td style={{ padding: "15px 20px", fontVariantNumeric: "tabular-nums", color: "#1b3a4b", fontWeight: 700 }}>{r.time}</td>
-                    <td style={{ padding: "15px 20px" }}><span style={{ display: "inline-block", fontSize: 13, fontWeight: 800, color: C.navy, background: C.lightBlue, borderRadius: 999, padding: "4px 12px" }}>{r.group}</span></td>
-                    <td style={{ padding: "15px 20px", color: C.grey, fontWeight: 700 }}>{r.pool}</td>
-                    <td style={{ padding: "15px 20px", color: C.grey }}>{r.instructor}</td>
+        {hasSchedule ? (
+          <div className="as-reveal" style={{ background: "#fff", borderRadius: 24, boxShadow: "0 10px 28px rgba(15,91,143,0.08)", border: "1px solid #eaf2f8", overflow: "hidden" }}>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 680 }}>
+                <thead>
+                  <tr style={{ background: C.navy, color: "#fff", textAlign: "left" }}>
+                    {["Dzień", "Godzina", "Grupa", "Basen", "Instruktor"].map((th) => (
+                      <th key={th} className="font-fredoka" style={{ padding: "16px 20px", fontWeight: 600, fontSize: 14 }}>{th}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {scheduleRows.map((r, i) => (
+                    <tr key={i} className="as-row" style={{ borderTop: "1px solid #eef4f8" }}>
+                      <td style={{ padding: "15px 20px", fontWeight: 800, color: "#1b3a4b" }}>{r.day}</td>
+                      <td style={{ padding: "15px 20px", fontVariantNumeric: "tabular-nums", color: "#1b3a4b", fontWeight: 700 }}>{r.time}</td>
+                      <td style={{ padding: "15px 20px" }}><span style={{ display: "inline-block", fontSize: 13, fontWeight: 800, color: C.navy, background: C.lightBlue, borderRadius: 999, padding: "4px 12px" }}>{r.group}</span></td>
+                      <td style={{ padding: "15px 20px", color: C.grey, fontWeight: 700 }}>{r.pool}</td>
+                      <td style={{ padding: "15px 20px", color: C.grey }}>{r.instructor}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div style={{ padding: "14px 20px", fontSize: 13, color: "#9aabb5", borderTop: "1px solid #eef4f8" }}>🔒 Grafik tylko do odczytu · aktualizowany z panelu administratora</div>
-        </div>
+        ) : (
+          <div className="as-reveal" style={{ background: "#fff", borderRadius: 24, boxShadow: "0 10px 28px rgba(15,91,143,0.08)", border: "1px dashed #c3d4df", padding: "40px 24px", textAlign: "center", color: C.grey }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>🗓️</div>
+            <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 18, color: C.navy }}>Grafik pojawi się wkrótce</div>
+            <p style={{ fontSize: 15, margin: "8px auto 0", maxWidth: 420 }}>Przygotowujemy terminy zajęć na nowy sezon. Zajrzyj tu ponownie lub zapisz dziecko przez formularz naboru.</p>
+          </div>
+        )}
       </section>
 
       {/* ============ CENNIK ============ */}
@@ -754,10 +798,19 @@ export default function Home() {
                   <label style={{ display: "block", fontWeight: 800, fontSize: 14, color: "#1b3a4b", marginBottom: 8 }}>Wiadomość / uwagi <span style={{ fontWeight: 400, color: "#5a6b75" }}>(opcjonalnie)</span></label>
                   <textarea value={fNote} onChange={(e) => setFNote(e.target.value)} rows={3} placeholder="np. preferowane godziny, pytania, informacje o dziecku…" className="as-input" style={{ width: "100%", fontSize: 15, padding: "13px 16px", borderRadius: 14, border: "2px solid #e3eef5", background: "#f8fcff", color: "#1b3a4b", resize: "vertical", fontFamily: "inherit" }} />
                 </div>
+                {/* Honeypot — ukryte pole; ludzie go nie widzą, boty wypełniają */}
+                <input value={fHp} onChange={(e) => setFHp(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }} />
+                <label style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, lineHeight: 1.5, color: C.grey, cursor: "pointer" }}>
+                  <input type="checkbox" checked={fConsent} onChange={(e) => { setFConsent(e.target.checked); setFormError(null); }} style={{ width: 18, height: 18, marginTop: 2, flex: "none" }} />
+                  <span>
+                    Wyrażam zgodę na przetwarzanie danych osobowych moich i dziecka w celu obsługi zgłoszenia, zgodnie z{" "}
+                    <a href="/polityka-prywatnosci" target="_blank" rel="noreferrer" style={{ color: C.navy, fontWeight: 800 }}>polityką prywatności</a>.
+                  </span>
+                </label>
                 {formError && (
                   <div style={{ fontSize: 14, fontWeight: 700, color: "#b4232a", background: "#fdeaea", borderRadius: 12, padding: "10px 14px" }}>{formError}</div>
                 )}
-                <button onClick={handleSubmit} disabled={submitting} className="font-fredoka as-btn-white" style={{ fontWeight: 600, fontSize: 17, color: "#fff", background: submitting ? "#caa46a" : C.orange, border: "none", borderRadius: 999, padding: "15px 30px", cursor: submitting ? "default" : "pointer", boxShadow: "0 10px 24px rgba(233,161,59,0.35)" }}>
+                <button onClick={handleSubmit} disabled={submitting || !fConsent} className="font-fredoka as-btn-white" style={{ fontWeight: 600, fontSize: 17, color: "#fff", background: submitting || !fConsent ? "#caa46a" : C.orange, border: "none", borderRadius: 999, padding: "15px 30px", cursor: submitting || !fConsent ? "default" : "pointer", boxShadow: "0 10px 24px rgba(233,161,59,0.35)" }}>
                   {submitting ? "Wysyłanie…" : "Wyślij zgłoszenie"}
                 </button>
               </div>
@@ -772,7 +825,7 @@ export default function Home() {
                     <a href="/login" style={{ color: C.navy, fontWeight: 800 }}>Załóż konto →</a>
                   </p>
                 )}
-                <button onClick={() => { setSent(false); setFName(""); setFAge(""); setFEmail(""); setFPhone(""); setFNote(""); }} className="font-fredoka as-btn-secondary" style={{ fontWeight: 600, fontSize: 15, color: C.navy, background: "#fff", border: "2px solid #6cb4e0", borderRadius: 999, padding: "11px 22px", cursor: "pointer", marginTop: 6 }}>
+                <button onClick={() => { setSent(false); setFName(""); setFAge(""); setFEmail(""); setFPhone(""); setFNote(""); setFConsent(false); }} className="font-fredoka as-btn-secondary" style={{ fontWeight: 600, fontSize: 15, color: C.navy, background: "#fff", border: "2px solid #6cb4e0", borderRadius: 999, padding: "11px 22px", cursor: "pointer", marginTop: 6 }}>
                   Wyślij kolejne
                 </button>
               </div>
@@ -852,7 +905,10 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.12)", padding: "20px 22px", textAlign: "center", fontSize: 13, color: "#9ec3dc" }}>© 2026 ALL SWIM · Wszystkie prawa zastrzeżone</div>
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.12)", padding: "20px 22px", textAlign: "center", fontSize: 13, color: "#9ec3dc" }}>
+          © 2026 ALL SWIM · Wszystkie prawa zastrzeżone ·{" "}
+          <a href="/polityka-prywatnosci" style={{ color: "#cfe6f5", textDecoration: "underline" }}>Polityka prywatności</a>
+        </div>
       </footer>
 
       {/* ============ LIGHTBOX ============ */}

@@ -40,30 +40,29 @@ export default defineSchema({
     order: v.number(),
   }).index("by_order", ["order"]),
 
-  // --- Poziomy zaawansowania (edytowalne w panelu) ---
+  // --- Poziomy zaawansowania (wybierane przez rodzica w formularzu) ---
   levels: defineTable({
     name: v.string(),
     description: v.optional(v.string()),
     order: v.number(),
   }).index("by_order", ["order"]),
 
-  // --- Grupy zajęciowe ---
+  // --- Grupy zajęciowe (roster dobierany przez administratora) ---
+  // Grupa NIE ma poziomu (poziom = wybór rodzica, trzymany przy zgłoszeniu) ani
+  // stałego basenu — basen wynika z terminów (scheduleEntries) oraz z przydziału
+  // konkretnego dziecka (enrollments.assignedPoolId).
   groups: defineTable({
     name: v.string(), // np. "Delfinki"
-    levelId: v.id("levels"),
-    poolId: v.id("pools"),
     instructor: v.optional(v.string()),
-    capacity: v.number(), // limit miejsc (widoczny tylko dla admina)
+    capacity: v.number(), // limit miejsc w grupie (widoczny tylko dla admina)
     order: v.number(),
-  })
-    .index("by_pool", ["poolId"])
-    .index("by_level", ["levelId"])
-    .index("by_order", ["order"]),
+  }).index("by_order", ["order"]),
 
-  // --- Pozycje harmonogramu (cotygodniowe terminy grupy) ---
+  // --- Terminy zajęć (sesja grupy na danym basenie) ---
+  // Jedna grupa może mieć terminy na kilku basenach (kilka wpisów z różnym poolId).
   scheduleEntries: defineTable({
     groupId: v.id("groups"),
-    poolId: v.id("pools"), // zdenormalizowane do filtrowania grafiku po basenie
+    poolId: v.id("pools"),
     dayOfWeek: v.number(), // 0 = poniedziałek ... 6 = niedziela
     startTime: v.string(), // "HH:MM"
     endTime: v.string(), // "HH:MM"
@@ -72,16 +71,7 @@ export default defineSchema({
     .index("by_pool", ["poolId"])
     .index("by_day", ["dayOfWeek"]),
 
-  // --- Przydziały użytkowników do grup (po zatwierdzeniu naboru) ---
-  memberships: defineTable({
-    userId: v.id("users"),
-    groupId: v.id("groups"),
-    active: v.boolean(),
-  })
-    .index("by_user", ["userId"])
-    .index("by_group", ["groupId"]),
-
-  // --- Zgłoszenia naboru ---
+  // --- Zgłoszenia naboru (jedno źródło prawdy o przydziale) ---
   enrollments: defineTable({
     // Dane zgłaszającego (formularz można wysłać bez konta).
     name: v.string(),
@@ -92,14 +82,30 @@ export default defineSchema({
     levelLabel: v.optional(v.string()), // zapis nazwy poziomu w chwili zgłoszenia
     isContinuing: v.boolean(), // czy kontynuuje zajęcia (priorytet na liście)
     note: v.optional(v.string()),
-    userId: v.optional(v.id("users")), // jeśli wysłane po zalogowaniu
+    userId: v.optional(v.id("users")), // jeśli wysłane / powiązane po zalogowaniu
+    consentAt: v.optional(v.number()), // moment akceptacji zgody RODO (dowód zgody)
     status: enrollmentStatus,
-    assignedGroupId: v.optional(v.id("groups")), // przydzielona grupa po akceptacji
+    // Przydział (stan roboczy administratora). Basen wynika z terminów grupy
+    // — cała grupa chodzi na jeden basen, brak wyboru basenu per dziecko.
+    assignedGroupId: v.optional(v.id("groups")), // grupa (wybierana przy akceptacji)
     decisionNote: v.optional(v.string()), // opcjonalne uzasadnienie decyzji
+    // Snapshot ostatnio OPUBLIKOWANEGO stanu — to widzi rodzic i wg tego liczymy
+    // różnice do wysyłki maili przy publikacji:
+    publishedStatus: v.optional(enrollmentStatus),
+    publishedGroupId: v.optional(v.id("groups")),
+    publishedTimesHash: v.optional(v.string()), // podpis godzin przy ostatniej publikacji
   })
     .index("by_status", ["status"])
     .index("by_user", ["userId"])
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .index("by_assigned_group", ["assignedGroupId"]),
+
+  // --- Lista oczekujących ("Powiadom mnie", gdy nabór zamknięty) ---
+  waitlist: defineTable({
+    email: v.string(),
+    note: v.optional(v.string()),
+    notified: v.optional(v.boolean()), // czy admin już powiadomił o otwarciu naboru
+  }).index("by_email", ["email"]),
 
   // --- Cennik (edytowalna tabela) ---
   prices: defineTable({
@@ -148,9 +154,9 @@ export default defineSchema({
     recruitmentOpensAt: v.optional(v.number()),
     recruitmentClosesAt: v.optional(v.number()),
     recruitmentInfo: v.optional(v.string()),
-    // Czy przydziały do grup/godzin są opublikowane dla rodziców
-    // (admin pracuje lokalnie, dopóki nie opublikuje).
-    schedulePublished: v.optional(v.boolean()),
+    // Czy grafik (siatka grup i godzin) jest widoczny publicznie i dla rodziców.
+    // Ustawiany na true przy pierwszej publikacji zmian.
+    scheduleLive: v.optional(v.boolean()),
     // Treści strony głównej — hero:
     heroEyebrow: v.optional(v.string()),
     heroLine1: v.optional(v.string()),
@@ -208,5 +214,7 @@ export default defineSchema({
     youtubeUrl: v.optional(v.string()),
     // Regulamin do pobrania (PDF w Convex storage):
     regulationsPdfId: v.optional(v.id("_storage")),
+    // Zdjęcie do sekcji „O mnie" (w Convex storage):
+    aboutImageId: v.optional(v.id("_storage")),
   }),
 });

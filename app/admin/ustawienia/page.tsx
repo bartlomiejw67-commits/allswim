@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { A, card, input, label, btnPrimary } from "@/components/admin/ui";
+import { Id } from "@/convex/_generated/dataModel";
+import { A, card, input, label, btnPrimary, btnSecondary, btnDanger } from "@/components/admin/ui";
 
 type Form = {
   recruitmentOpen: boolean;
@@ -109,13 +110,64 @@ const EMPTY: Form = {
   youtubeUrl: "",
 };
 
+function WaitlistCard() {
+  const list = useQuery(api.waitlist.list);
+  const remove = useMutation(api.waitlist.remove);
+
+  return (
+    <div style={card}>
+      <h2 className="font-fredoka" style={{ fontSize: 17, color: A.navy, margin: "0 0 4px" }}>
+        Lista oczekujących{list && list.length ? ` (${list.length})` : ""}
+      </h2>
+      <p style={{ color: A.grey, fontSize: 13, margin: "0 0 12px" }}>
+        E-maile rodziców zostawione przyciskiem „Powiadom mnie", gdy nabór jest zamknięty. Po otwarciu naboru możesz ich powiadomić.
+      </p>
+      {list === undefined ? (
+        <p style={{ color: A.grey, fontSize: 14 }}>Ładowanie…</p>
+      ) : list.length === 0 ? (
+        <p style={{ color: A.grey, fontSize: 14 }}>Brak zapisów.</p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {list.map((w) => (
+            <div key={w._id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "#f8fcff", border: "1px solid #eaf2f8", borderRadius: 10, padding: "8px 12px" }}>
+              <span style={{ fontSize: 14, color: "#1b3a4b" }}>{w.email}</span>
+              <button style={{ ...btnDanger, padding: "5px 12px" }} onClick={() => { if (confirm("Usunąć z listy?")) remove({ id: w._id as Id<"waitlist"> }); }}>Usuń</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminSettings() {
   const settings = useQuery(api.settings.get);
   const update = useMutation(api.settings.update);
+  const generateUploadUrl = useMutation(api.images.generateUploadUrl);
+  const setAboutImage = useMutation(api.settings.setAboutImage);
   const [form, setForm] = useState<Form>(EMPTY);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const aboutFileRef = useRef<HTMLInputElement>(null);
+  const [aboutUploading, setAboutUploading] = useState(false);
+
+  async function onAboutPhoto(files: FileList | null) {
+    const file = files?.[0];
+    if (!file) return;
+    setAboutUploading(true);
+    try {
+      const url = await generateUploadUrl();
+      const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
+      const json = (await res.json()) as { storageId: string };
+      await setAboutImage({ storageId: json.storageId as Id<"_storage"> });
+    } catch (e) {
+      alert((e as { data?: string; message?: string }).data ?? "Nie udało się wgrać zdjęcia.");
+    } finally {
+      setAboutUploading(false);
+      if (aboutFileRef.current) aboutFileRef.current.value = "";
+    }
+  }
 
   useEffect(() => {
     if (settings !== undefined && !loaded) {
@@ -208,6 +260,8 @@ export default function AdminSettings() {
           <textarea value={form.recruitmentInfo} onChange={(e) => set("recruitmentInfo", e.target.value)} rows={2} style={{ ...input, resize: "vertical" }} placeholder="np. Wolne miejsca w grupach początkujących · zapisy do 15 września" />
         </div>
 
+        <WaitlistCard />
+
         <div style={card}>
           <h2 className="font-fredoka" style={{ fontSize: 17, color: A.navy, margin: "0 0 12px" }}>Sekcja powitalna (hero)</h2>
           <label style={label}>Nadtytuł (mała kreska)</label>
@@ -231,6 +285,27 @@ export default function AdminSettings() {
 
         <div style={card}>
           <h2 className="font-fredoka" style={{ fontSize: 17, color: A.navy, margin: "0 0 12px" }}>Sekcja „O mnie”</h2>
+          <label style={label}>Zdjęcie</label>
+          <div style={{ display: "flex", gap: 14, alignItems: "center", marginBottom: 14 }}>
+            <div style={{ width: 96, height: 120, borderRadius: 14, overflow: "hidden", border: "1px solid #d6e7f2", background: "#eef4f8", flex: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {settings?.aboutImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={settings.aboutImageUrl} alt="Ola" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                <span style={{ fontSize: 11, color: "#7fa3bd", fontFamily: "monospace", textAlign: "center", padding: 6 }}>brak zdjęcia</span>
+              )}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
+              <input ref={aboutFileRef} type="file" accept="image/*" onChange={(e) => onAboutPhoto(e.target.files)} style={{ display: "none" }} />
+              <button type="button" style={btnSecondary} disabled={aboutUploading} onClick={() => aboutFileRef.current?.click()}>
+                {aboutUploading ? "Wgrywanie…" : settings?.aboutImageUrl ? "Zmień zdjęcie" : "Wgraj zdjęcie"}
+              </button>
+              {settings?.aboutImageUrl && (
+                <button type="button" style={btnDanger} disabled={aboutUploading} onClick={() => { if (confirm("Usunąć zdjęcie?")) setAboutImage({}); }}>Usuń zdjęcie</button>
+              )}
+              <span style={{ fontSize: 12, color: A.grey }}>Najlepiej pionowe, proporcje ~4:5. Zapisuje się od razu.</span>
+            </div>
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div><label style={label}>Nadtytuł</label><input value={form.aboutEyebrow} onChange={(e) => set("aboutEyebrow", e.target.value)} style={input} placeholder="O mnie" /></div>
             <div><label style={label}>Tytuł</label><input value={form.aboutTitle} onChange={(e) => set("aboutTitle", e.target.value)} style={input} placeholder="Cześć, jestem Ola!" /></div>

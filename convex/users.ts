@@ -84,12 +84,6 @@ export const remove = mutation({
       .collect();
     for (const s of sessions) await ctx.db.delete("authSessions", s._id);
 
-    const memberships = await ctx.db
-      .query("memberships")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
-    for (const m of memberships) await ctx.db.delete("memberships", m._id);
-
     // Zgłoszenia zostają (historia), ale odpinamy je od usuwanego konta.
     const enrollments = await ctx.db
       .query("enrollments")

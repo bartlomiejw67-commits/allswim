@@ -82,8 +82,6 @@ export const run = mutation({
       if (!groupIds[key]) {
         groupIds[key] = await ctx.db.insert("groups", {
           name: r.group,
-          levelId: levelIds[r.level],
-          poolId: poolIds[r.pool],
           instructor: "Ola Laskowska",
           capacity: 6,
           order: groupOrder++,

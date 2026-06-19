@@ -19,11 +19,13 @@ import type * as levels from "../levels.js";
 import type * as lib from "../lib.js";
 import type * as pools from "../pools.js";
 import type * as prices from "../prices.js";
+import type * as publish from "../publish.js";
 import type * as regulations from "../regulations.js";
 import type * as schedule from "../schedule.js";
 import type * as seed from "../seed.js";
 import type * as settings from "../settings.js";
 import type * as users from "../users.js";
+import type * as waitlist from "../waitlist.js";
 
 import type {
   ApiFromModules,
@@ -43,11 +45,13 @@ declare const fullApi: ApiFromModules<{
   lib: typeof lib;
   pools: typeof pools;
   prices: typeof prices;
+  publish: typeof publish;
   regulations: typeof regulations;
   schedule: typeof schedule;
   seed: typeof seed;
   settings: typeof settings;
   users: typeof users;
+  waitlist: typeof waitlist;
 }>;
 
 /**

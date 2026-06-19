@@ -11,20 +11,43 @@ export const get = query({
     const regulationsPdfUrl = row.regulationsPdfId
       ? await ctx.storage.getUrl(row.regulationsPdfId)
       : null;
-    return { ...row, regulationsPdfUrl };
+    const aboutImageUrl = row.aboutImageId
+      ? await ctx.storage.getUrl(row.aboutImageId)
+      : null;
+    return { ...row, regulationsPdfUrl, aboutImageUrl };
   },
 });
 
-// Admin: publikacja / ukrycie grafiku (godzin i grup) dla rodziców.
-export const setSchedulePublished = mutation({
-  args: { published: v.boolean() },
-  handler: async (ctx, { published }) => {
+// Admin: ustawienie/usunięcie zdjęcia sekcji „O mnie" (pomiń storageId, by usunąć).
+export const setAboutImage = mutation({
+  args: { storageId: v.optional(v.id("_storage")) },
+  handler: async (ctx, { storageId }) => {
     await requireAdmin(ctx);
     const existing = (await ctx.db.query("siteSettings").take(1))[0];
     if (existing) {
-      await ctx.db.patch("siteSettings", existing._id, { schedulePublished: published });
+      if (existing.aboutImageId && existing.aboutImageId !== storageId) {
+        await ctx.storage.delete(existing.aboutImageId);
+      }
+      await ctx.db.patch("siteSettings", existing._id, { aboutImageId: storageId });
     } else {
-      await ctx.db.insert("siteSettings", { recruitmentOpen: false, schedulePublished: published });
+      await ctx.db.insert("siteSettings", { recruitmentOpen: false, aboutImageId: storageId });
+    }
+  },
+});
+
+// Admin: pokazanie / ukrycie grafiku (siatki grup i godzin) publicznie i dla rodziców.
+export const setScheduleLive = mutation({
+  args: { live: v.boolean() },
+  handler: async (ctx, { live }) => {
+    await requireAdmin(ctx);
+    const existing = (await ctx.db.query("siteSettings").take(1))[0];
+    if (existing) {
+      await ctx.db.patch("siteSettings", existing._id, { scheduleLive: live });
+    } else {
+      await ctx.db.insert("siteSettings", {
+        recruitmentOpen: false,
+        scheduleLive: live,
+      });
     }
   },
 });
@@ -53,7 +76,7 @@ export const update = mutation({
     recruitmentOpensAt: v.optional(v.number()),
     recruitmentClosesAt: v.optional(v.number()),
     recruitmentInfo: v.optional(v.string()),
-    schedulePublished: v.optional(v.boolean()),
+    scheduleLive: v.optional(v.boolean()),
     heroEyebrow: v.optional(v.string()),
     heroLine1: v.optional(v.string()),
     heroLine2: v.optional(v.string()),

@@ -42,12 +42,12 @@ export const remove = mutation({
   handler: async (ctx, { id }) => {
     await requireAdmin(ctx);
     const inUse = await ctx.db
-      .query("groups")
+      .query("scheduleEntries")
       .withIndex("by_pool", (q) => q.eq("poolId", id))
       .take(1);
     if (inUse.length) {
       throw new ConvexError(
-        "Nie można usunąć basenu — jest przypisany do grupy.",
+        "Nie można usunąć basenu — ma przypisane terminy w grafiku.",
       );
     }
     await ctx.db.delete("pools", id);

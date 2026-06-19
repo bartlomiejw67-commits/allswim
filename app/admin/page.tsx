@@ -120,7 +120,7 @@ export default function AdminEnrollments() {
                       <select value={groupChoice[e._id] ?? ""} onChange={(ev) => setGroupChoice((g) => ({ ...g, [e._id]: ev.target.value }))} style={{ ...input, width: 220 }}>
                         <option value="">— wybierz grupę —</option>
                         {groups?.map((g) => (
-                          <option key={g._id} value={g._id}>{g.name}{g.poolName ? ` · ${g.poolName}` : ""}</option>
+                          <option key={g._id} value={g._id}>{g.name}</option>
                         ))}
                       </select>
                       <div style={{ display: "flex", gap: 8 }}>

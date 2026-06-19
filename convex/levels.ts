@@ -1,5 +1,5 @@
 import { query, mutation } from "./_generated/server";
-import { v, ConvexError } from "convex/values";
+import { v } from "convex/values";
 import { requireAdmin } from "./lib";
 
 // Lista poziomów zaawansowania (publiczna), posortowana.
@@ -41,15 +41,8 @@ export const remove = mutation({
   args: { id: v.id("levels") },
   handler: async (ctx, { id }) => {
     await requireAdmin(ctx);
-    const inUse = await ctx.db
-      .query("groups")
-      .withIndex("by_level", (q) => q.eq("levelId", id))
-      .take(1);
-    if (inUse.length) {
-      throw new ConvexError(
-        "Nie można usunąć poziomu — jest przypisany do grupy.",
-      );
-    }
+    // Poziom to tylko etykieta wybierana przez rodzica (zapisana też jako
+    // levelLabel na zgłoszeniu), więc usunięcie nie psuje istniejących zgłoszeń.
     await ctx.db.delete("levels", id);
   },
 });
