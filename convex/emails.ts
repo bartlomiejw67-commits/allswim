@@ -1,13 +1,56 @@
 import { internalAction } from "./_generated/server";
 import { v } from "convex/values";
 
-// SZKIELETY wysyłki maili. Po podłączeniu Resend (zweryfikowana domena)
-// wystarczy podmienić `console.log` na realne wywołanie API Resend w każdej
-// z funkcji (treść wiadomości można złożyć z przekazanych argumentów).
-// Funkcje są wywoływane przez `ctx.scheduler.runAfter` z mutacji (submit /
-// publish), więc nie blokują transakcji.
+// Wysyłka maili przez Resend (https://resend.com).
+// Klucz API trzymany jest jako zmienna środowiskowa Convex: RESEND_API_KEY.
+// Nadawca: RESEND_FROM (domyślnie testowy adres Resend — działa zanim
+// podepniesz własną domenę; UWAGA: bez zweryfikowanej domeny Resend dostarcza
+// maile tylko na adres właściciela konta Resend).
+// Funkcje są wywoływane przez ctx.scheduler.runAfter z mutacji (submit/publish).
 
-// Do administratora: nowe zgłoszenie w naborze (wysyłane od razu przy submit).
+declare const process: { env: Record<string, string | undefined> };
+
+async function sendEmail(opts: { to: string; subject: string; html: string }) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM || "ALL SWIM <onboarding@resend.dev>";
+  if (!apiKey) {
+    console.log(`[email:brak-klucza] do ${opts.to} — "${opts.subject}"`);
+    return;
+  }
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ from, to: [opts.to], subject: opts.subject, html: opts.html }),
+  });
+  if (!res.ok) {
+    console.error(`[email] Resend ${res.status}: ${await res.text()}`);
+  }
+}
+
+function layout(title: string, bodyHtml: string) {
+  return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:540px;margin:0 auto;color:#1b3a4b">
+    <div style="background:linear-gradient(135deg,#6cb4e0,#0f5b8f);color:#fff;padding:20px 24px;border-radius:16px 16px 0 0">
+      <div style="font-size:22px;font-weight:800;letter-spacing:.5px">ALL SWIM</div>
+      <div style="font-size:13px;opacity:.9">szkółka pływacka</div>
+    </div>
+    <div style="border:1px solid #e3eef5;border-top:none;border-radius:0 0 16px 16px;padding:24px;background:#fff">
+      <h2 style="margin:0 0 14px;color:#0f5b8f;font-size:18px">${title}</h2>
+      ${bodyHtml}
+    </div>
+    <div style="text-align:center;color:#9aabb5;font-size:12px;padding:14px">© ALL SWIM</div>
+  </div>`;
+}
+
+function accountLink() {
+  const site = process.env.SITE_URL;
+  if (!site) return "";
+  return `<p style="margin:16px 0 0;font-size:14px"><a href="${site}/konto" style="color:#0f5b8f;font-weight:700">Zaloguj się, aby zobaczyć szczegóły →</a></p>`;
+}
+
+// Do administratora: nowe zgłoszenie w naborze (od razu przy submit).
 export const sendAdminNewEnrollment = internalAction({
   args: {
     to: v.string(),
@@ -17,45 +60,42 @@ export const sendAdminNewEnrollment = internalAction({
     parentPhone: v.union(v.string(), v.null()),
     isContinuing: v.boolean(),
   },
-  handler: async (ctx, args) => {
-    console.log(
-      `[email:placeholder] NOWE ZGŁOSZENIE → admin ${args.to}: ` +
-        `${args.childName}` +
-        `${args.levelLabel ? `, poziom: ${args.levelLabel}` : ""}` +
-        `${args.isContinuing ? " (kontynuuje)" : ""}` +
-        ` · kontakt: ${args.parentEmail}${args.parentPhone ? `, ${args.parentPhone}` : ""}`,
+  handler: async (_ctx, args) => {
+    const html = layout(
+      "Nowe zgłoszenie w naborze",
+      `<p style="margin:0 0 8px;font-size:15px"><strong>${args.childName}</strong>${args.isContinuing ? " · <em>kontynuuje</em>" : " · nowy"}</p>
+       <ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.7">
+         ${args.levelLabel ? `<li>Poziom: ${args.levelLabel}</li>` : ""}
+         <li>E-mail: ${args.parentEmail}</li>
+         ${args.parentPhone ? `<li>Telefon: ${args.parentPhone}</li>` : ""}
+       </ul>
+       <p style="margin:16px 0 0;font-size:14px;color:#5a6b75">Zgłoszenie czeka na rozpatrzenie w panelu administratora.</p>`,
     );
-    // TODO(Resend): wysłać powiadomienie do administratora o nowym zgłoszeniu.
+    await sendEmail({ to: args.to, subject: `Nowe zgłoszenie: ${args.childName}`, html });
   },
 });
 
 // Do rodzica: potwierdzenie otrzymania zgłoszenia (od razu po wysłaniu formularza).
 export const sendParticipantReceived = internalAction({
-  args: {
-    to: v.string(),
-    childName: v.string(),
-  },
-  handler: async (ctx, args) => {
-    console.log(
-      `[email:placeholder] POTWIERDZENIE ZGŁOSZENIA → ${args.to}: ${args.childName} — dziękujemy, odezwiemy się wkrótce.`,
+  args: { to: v.string(), childName: v.string() },
+  handler: async (_ctx, args) => {
+    const html = layout(
+      "Dziękujemy za zgłoszenie!",
+      `<p style="margin:0;font-size:15px;line-height:1.6">Otrzymaliśmy zgłoszenie dla <strong>${args.childName}</strong>. Skontaktujemy się z propozycją grupy i terminu. Do zobaczenia w wodzie! 🌊</p>`,
     );
-    // TODO(Resend): wysłać rodzicowi potwierdzenie otrzymania zgłoszenia.
+    await sendEmail({ to: args.to, subject: "Dziękujemy za zgłoszenie — ALL SWIM", html });
   },
 });
 
 // Do uczestnika: wypisanie z grupy / cofnięcie przydziału (po publikacji).
 export const sendParticipantRemoved = internalAction({
-  args: {
-    to: v.string(),
-    childName: v.string(),
-    groupName: v.union(v.string(), v.null()),
-  },
-  handler: async (ctx, args) => {
-    console.log(
-      `[email:placeholder] WYPISANIE → ${args.to}: ${args.childName}` +
-        `${args.groupName ? ` z grupy „${args.groupName}”` : ""} — wróciliśmy do ustalania przydziału.`,
+  args: { to: v.string(), childName: v.string(), groupName: v.union(v.string(), v.null()) },
+  handler: async (_ctx, args) => {
+    const html = layout(
+      "Aktualizacja przydziału",
+      `<p style="margin:0;font-size:15px;line-height:1.6">Przydział dla <strong>${args.childName}</strong>${args.groupName ? ` (grupa „${args.groupName}”)` : ""} został wycofany — wróciliśmy do ustalania grupy. Damy znać, gdy będzie nowy termin.</p>${accountLink()}`,
     );
-    // TODO(Resend): wysłać informację o wypisaniu / cofnięciu przydziału.
+    await sendEmail({ to: args.to, subject: "Aktualizacja zgłoszenia — ALL SWIM", html });
   },
 });
 
@@ -68,30 +108,31 @@ export const sendParticipantAssigned = internalAction({
     poolName: v.union(v.string(), v.null()),
     times: v.string(),
   },
-  handler: async (ctx, args) => {
-    console.log(
-      `[email:placeholder] PRZYDZIAŁ → ${args.to}: ${args.childName} ` +
-        `do grupy „${args.groupName}”` +
-        `${args.poolName ? `, basen: ${args.poolName}` : ""}` +
-        `${args.times ? `, terminy: ${args.times}` : ""}`,
+  handler: async (_ctx, args) => {
+    const html = layout(
+      "Dziecko przyjęte na zajęcia! 🎉",
+      `<p style="margin:0 0 10px;font-size:15px;line-height:1.6"><strong>${args.childName}</strong> został przydzielony do grupy:</p>
+       <div style="background:#e8f4fb;border-radius:12px;padding:14px 16px;font-size:15px;line-height:1.7">
+         <strong>${args.groupName}</strong><br/>
+         ${args.poolName ? `Basen: ${args.poolName}<br/>` : ""}
+         ${args.times ? `Terminy: ${args.times}` : ""}
+       </div>${accountLink()}`,
     );
-    // TODO(Resend): wysłać informację o przydzieleniu do grupy.
+    await sendEmail({ to: args.to, subject: "Przydział do grupy — ALL SWIM", html });
   },
 });
 
 // Do uczestnika: odrzucenie zgłoszenia (po publikacji).
 export const sendParticipantRejected = internalAction({
-  args: {
-    to: v.string(),
-    childName: v.string(),
-    note: v.union(v.string(), v.null()),
-  },
-  handler: async (ctx, args) => {
-    console.log(
-      `[email:placeholder] ODRZUCENIE → ${args.to}: ${args.childName}` +
-        `${args.note ? ` (uwaga: ${args.note})` : ""}`,
+  args: { to: v.string(), childName: v.string(), note: v.union(v.string(), v.null()) },
+  handler: async (_ctx, args) => {
+    const html = layout(
+      "Informacja o zgłoszeniu",
+      `<p style="margin:0;font-size:15px;line-height:1.6">Niestety nie możemy obecnie przyjąć zgłoszenia dla <strong>${args.childName}</strong>.</p>
+       ${args.note ? `<p style="margin:12px 0 0;font-size:14px;color:#5a6b75">${args.note}</p>` : ""}
+       <p style="margin:12px 0 0;font-size:14px;color:#5a6b75">Zapraszamy do kontaktu i przy kolejnym naborze.</p>`,
     );
-    // TODO(Resend): wysłać informację o odrzuceniu zgłoszenia.
+    await sendEmail({ to: args.to, subject: "Informacja o zgłoszeniu — ALL SWIM", html });
   },
 });
 
@@ -104,13 +145,16 @@ export const sendParticipantScheduleChanged = internalAction({
     poolName: v.union(v.string(), v.null()),
     times: v.string(),
   },
-  handler: async (ctx, args) => {
-    console.log(
-      `[email:placeholder] ZMIANA GRAFIKU → ${args.to}: ${args.childName} ` +
-        `(grupa „${args.groupName}”` +
-        `${args.poolName ? `, basen: ${args.poolName}` : ""}` +
-        `${args.times ? `, terminy: ${args.times}` : ""})`,
+  handler: async (_ctx, args) => {
+    const html = layout(
+      "Zmiana grafiku zajęć",
+      `<p style="margin:0 0 10px;font-size:15px;line-height:1.6">Zaktualizowaliśmy zajęcia dla <strong>${args.childName}</strong>:</p>
+       <div style="background:#e8f4fb;border-radius:12px;padding:14px 16px;font-size:15px;line-height:1.7">
+         <strong>${args.groupName}</strong><br/>
+         ${args.poolName ? `Basen: ${args.poolName}<br/>` : ""}
+         ${args.times ? `Terminy: ${args.times}` : ""}
+       </div>${accountLink()}`,
     );
-    // TODO(Resend): wysłać informację o zmianie grupy / godzin zajęć.
+    await sendEmail({ to: args.to, subject: "Zmiana grafiku zajęć — ALL SWIM", html });
   },
 });
