@@ -82,11 +82,30 @@ img { max-width: 100%; }
 
 .as-pill { transition: all .15s; cursor: pointer; }
 
+/* ===== Hero: układ slogan / bańka / reszta ===== */
+.as-hero-grid {
+  grid-template-columns: 1.08fr 0.92fr;
+  grid-template-areas:
+    "top bubble"
+    "bottom bubble";
+  column-gap: 40px;
+  row-gap: 0;
+}
+.as-hero-top { grid-area: top; }
+.as-hero-bottom { grid-area: bottom; }
+.as-hero-bubble { grid-area: bubble; align-self: center; }
+
 /* ===== Responsywność (z designu) ===== */
 @media (max-width: 900px) {
   .as-nav-links { display: none !important; }
   .as-burger { display: inline-flex !important; }
-  .as-hero-grid { grid-template-columns: 1fr !important; }
-  .as-hero-bubble { margin: 10px auto 0 !important; }
+  .as-hero-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "top"
+      "bubble"
+      "bottom" !important;
+  }
+  .as-hero-bubble { margin: 18px auto !important; }
   .as-login-desktop { display: none !important; }
 }

@@ -344,8 +344,8 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="as-hero-grid" style={{ position: "relative", zIndex: 2, maxWidth: 1120, margin: "0 auto", padding: "84px 22px 150px", display: "grid", gridTemplateColumns: "1.08fr 0.92fr", gap: 40, alignItems: "center" }}>
-          <div>
+        <div className="as-hero-grid" style={{ position: "relative", zIndex: 2, maxWidth: 1120, margin: "0 auto", padding: "84px 22px 150px", display: "grid" }}>
+          <div className="as-hero-top">
             <div className="font-fredoka" style={{ display: "inline-flex", alignItems: "center", gap: 12, fontWeight: 700, fontSize: 14, letterSpacing: "0.14em", textTransform: "uppercase", color: "#ffd27a", textShadow: "0 1px 6px rgba(8,50,80,0.35)" }}>
               <span style={{ width: 34, height: 2, background: "#ffd27a", borderRadius: 2, display: "inline-block" }} />
               {heroEyebrow}
@@ -353,6 +353,8 @@ export default function Home() {
             <h1 className="font-fredoka" style={{ fontWeight: 700, fontSize: "clamp(38px,5.5vw,62px)", lineHeight: 1.05, margin: "18px 0 0", maxWidth: 820, textShadow: "0 2px 14px rgba(8,50,80,0.35)" }}>
               {heroLine1}<br /><span style={{ color: "#ffd27a" }}>{heroLine2}</span>
             </h1>
+          </div>
+          <div className="as-hero-bottom">
             <p style={{ fontSize: "clamp(17px,2.2vw,21px)", lineHeight: 1.55, color: "#f2faff", maxWidth: 580, margin: "20px 0 0", textShadow: "0 1px 6px rgba(8,50,80,0.4)" }}>
               {heroSubtitle}
             </p>
