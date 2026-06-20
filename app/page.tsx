@@ -93,6 +93,7 @@ export default function Home() {
   const [lightbox, setLightbox] = useState<{ items: { url: string | null; label: string }[]; index: number } | null>(null);
   const [openReg, setOpenReg] = useState(0);
   const [showAllGallery, setShowAllGallery] = useState(false);
+  const [showAllCamps, setShowAllCamps] = useState(false);
   const [fLevel, setFLevel] = useState<string>("");
   const [fCont, setFCont] = useState("nie");
   const [fName, setFName] = useState("");
@@ -297,6 +298,12 @@ export default function Home() {
   // Dwa zdjęcia flagowe obozów (uzupełnione placeholderami, jeśli brak).
   const flagship: { url: string | null; label: string }[] = [...campPhotoItems.slice(0, 4)];
   while (flagship.length < 4) flagship.push({ url: null, label: `ZDJĘCIE ${flagship.length + 1}` });
+  // Kafelki obozów: gdy są zdjęcia — 4 podglądowe lub wszystkie (po rozwinięciu); gdy brak — placeholdery.
+  const campVisible = campPhotoItems.length
+    ? showAllCamps
+      ? campPhotoItems
+      : campPhotoItems.slice(0, 4)
+    : flagship;
 
   const camps = campsData ?? [];
 
@@ -593,7 +600,7 @@ export default function Home() {
         </div>
         {siblingDiscounts.length > 0 && (
           <div className="as-reveal" style={{ maxWidth: 720, margin: "28px auto 0", background: "#fff", borderRadius: 24, padding: "26px 28px", boxShadow: "0 10px 28px rgba(15,91,143,0.08)", border: "2px solid #ffe6bd" }}>
-            <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 19, color: C.navy, display: "flex", alignItems: "center", gap: 8 }}>👨‍👩‍👧‍👦 Zniżki dla rodzeństwa</div>
+            <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 19, color: C.navy, display: "flex", alignItems: "center", gap: 8 }}>Zniżki dla rodzeństwa</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
               {siblingDiscounts.map((d, i) => (
                 <div key={i} style={{ display: "flex", gap: 10, fontSize: 15, lineHeight: 1.5, color: "#1b3a4b" }}>
@@ -607,12 +614,12 @@ export default function Home() {
 
         {(paymentAccount || paymentDeadline || paymentNote) && (
           <div className="as-reveal" style={{ maxWidth: 720, margin: "22px auto 0", background: "linear-gradient(135deg,#e8f4fb,#f4fafe)", borderRadius: 24, padding: "26px 28px", border: "1px solid #d6e7f2" }}>
-            <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 19, color: C.navy, display: "flex", alignItems: "center", gap: 8 }}>💳 Płatności</div>
+            <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 19, color: C.navy, display: "flex", alignItems: "center", gap: 8 }}>Płatności</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 14, fontSize: 15, color: "#1b3a4b" }}>
-              {paymentDeadline && <div>📅 Termin płatności: <strong>{paymentDeadline}</strong></div>}
+              {paymentDeadline && <div>Termin płatności: <strong>{paymentDeadline}</strong></div>}
               {paymentAccount && (
                 <div>
-                  🏦 Numer konta:
+                  Numer konta:
                   <div style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 16, color: C.navy, background: "#fff", borderRadius: 10, padding: "10px 14px", marginTop: 6, wordBreak: "break-all" }}>{paymentAccount}</div>
                 </div>
               )}
@@ -654,7 +661,7 @@ export default function Home() {
 
       {/* ============ OBOZY ============ */}
       <section id="obozy" style={{ position: "relative", marginTop: 72, background: "linear-gradient(170deg,#0f5b8f,#0a3f63)", color: "#fff", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: -1, left: 0, right: 0, transform: "rotate(180deg)", lineHeight: 0 }}>
+        <div style={{ position: "absolute", top: -1, left: 0, right: 0, transform: "rotate(180deg)", lineHeight: 0, pointerEvents: "none" }}>
           <svg viewBox="0 0 1440 70" preserveAspectRatio="none" style={{ width: "100%", height: 60, display: "block" }}><path d="M0,35 C360,70 720,0 1080,35 C1260,52 1380,18 1440,35 L1440,70 L0,70 Z" fill="#f4fafe" /></svg>
         </div>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "90px 22px 80px" }}>
@@ -696,14 +703,14 @@ export default function Home() {
           <div className="as-reveal" style={{ marginBottom: 40 }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
               <h3 className="font-fredoka" style={{ fontWeight: 700, fontSize: 22, color: "#fff", margin: 0 }}>{campsPhotosHeading}</h3>
-              {campPhotoItems.length > 0 && (
-                <button onClick={() => setLightbox({ items: campPhotoItems, index: 0 })} className="font-fredoka" style={{ fontWeight: 600, fontSize: 14, color: "#0f5b8f", background: "#fff", border: "none", borderRadius: 999, padding: "9px 18px", cursor: "pointer" }}>
-                  Pełna galeria zdjęć ({campPhotoItems.length})
+              {campPhotoItems.length > 4 && (
+                <button onClick={() => setShowAllCamps((v) => !v)} className="font-fredoka" style={{ fontWeight: 600, fontSize: 14, color: "#0f5b8f", background: "#fff", border: "none", borderRadius: 999, padding: "9px 18px", cursor: "pointer" }}>
+                  {showAllCamps ? "Pokaż mniej" : `Zobacz wszystkie (${campPhotoItems.length})`}
                 </button>
               )}
             </div>
             <div className="as-camp-grid" style={{ display: "grid", gap: 14 }}>
-              {flagship.map((item, i) => (
+              {campVisible.map((item, i) => (
                 <button key={i} onClick={() => { if (item.url) setLightbox({ items: campPhotoItems, index: i }); }} className={item.url ? "as-gallery-item" : undefined} style={{ border: "none", padding: 0, cursor: item.url ? "pointer" : "default", borderRadius: 20, overflow: "hidden", aspectRatio: "4/3", position: "relative", boxShadow: "0 10px 24px rgba(0,0,0,0.25)" }}>
                   {item.url ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -729,7 +736,7 @@ export default function Home() {
             <ContactAction value={contactEmail} type="email" triggerStyle={{ fontWeight: 700, fontSize: 18, color: "#fff" }} />
           </div>
         </div>
-        <div style={{ position: "absolute", bottom: -1, left: 0, right: 0, lineHeight: 0 }}>
+        <div style={{ position: "absolute", bottom: -1, left: 0, right: 0, lineHeight: 0, pointerEvents: "none" }}>
           <svg viewBox="0 0 1440 70" preserveAspectRatio="none" style={{ width: "100%", height: 60, display: "block" }}><path d="M0,35 C360,70 720,0 1080,35 C1260,52 1380,18 1440,35 L1440,70 L0,70 Z" fill="#f4fafe" /></svg>
         </div>
       </section>
@@ -873,7 +880,7 @@ export default function Home() {
 
       {/* ============ STOPKA ============ */}
       <footer id="kontakt" style={{ position: "relative", marginTop: 60, background: "linear-gradient(170deg,#0f5b8f,#0a3f63)", color: "#fff" }}>
-        <div style={{ position: "absolute", top: -1, left: 0, right: 0, transform: "rotate(180deg)", lineHeight: 0 }}>
+        <div style={{ position: "absolute", top: -1, left: 0, right: 0, transform: "rotate(180deg)", lineHeight: 0, pointerEvents: "none" }}>
           <svg viewBox="0 0 1440 70" preserveAspectRatio="none" style={{ width: "100%", height: 58, display: "block" }}><path d="M0,35 C360,70 720,0 1080,35 C1260,52 1380,18 1440,35 L1440,70 L0,70 Z" fill="#f4fafe" /></svg>
         </div>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "90px 22px 36px", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 40 }}>
@@ -992,7 +999,7 @@ function ContactAction({
   if (!value || !value.trim()) return null;
 
   const href = type === "email" ? `mailto:${value}` : `tel:${value.replace(/[^+\d]/g, "")}`;
-  const actionLabel = type === "email" ? "✉️ Napisz e-mail" : "📞 Zadzwoń";
+  const actionLabel = type === "email" ? "Napisz e-mail" : "Zadzwoń";
 
   function toggle() {
     if (open) {
@@ -1020,7 +1027,7 @@ function ContactAction({
         ref={btnRef}
         onClick={toggle}
         className="font-fredoka"
-        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", textDecoration: "underline", textUnderlineOffset: 3, ...triggerStyle }}
+        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontWeight: 700, ...triggerStyle }}
       >
         {value}
       </button>
@@ -1032,7 +1039,7 @@ function ContactAction({
               {actionLabel}
             </a>
             <button onClick={copy} className="as-contact-opt" style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", cursor: "pointer", color: copied ? "#1f8a5b" : "#1b3a4b", fontWeight: 700, fontSize: 14, padding: "11px 12px", borderRadius: 10, textAlign: "left" }}>
-              {copied ? "✓ Skopiowano!" : "📋 Kopiuj"}
+              {copied ? "Skopiowano!" : "Kopiuj"}
             </button>
           </div>
         </>
