@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useMutation } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "@/convex/_generated/api";
@@ -1007,7 +1008,12 @@ function ContactAction({
       return;
     }
     const r = btnRef.current?.getBoundingClientRect();
-    if (r) setPos({ top: r.bottom + 8, left: Math.min(r.left, window.innerWidth - 232) });
+    if (r) {
+      const menuH = 118;
+      // Gdy przycisk jest nisko (mało miejsca pod nim) — pokaż menu nad nim.
+      const top = r.bottom + 8 + menuH > window.innerHeight ? Math.max(8, r.top - menuH) : r.bottom + 8;
+      setPos({ top, left: Math.min(r.left, window.innerWidth - 232) });
+    }
     setOpen(true);
   }
 
@@ -1031,7 +1037,7 @@ function ContactAction({
       >
         {value}
       </button>
-      {open && pos && (
+      {open && pos && typeof document !== "undefined" && createPortal(
         <>
           <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 120 }} />
           <div style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 121, background: "#fff", borderRadius: 14, boxShadow: "0 16px 40px rgba(8,40,64,0.3)", border: "1px solid #e3eef5", padding: 8, display: "flex", flexDirection: "column", gap: 4, minWidth: 210 }}>
@@ -1042,7 +1048,8 @@ function ContactAction({
               {copied ? "Skopiowano!" : "Kopiuj"}
             </button>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </>
   );
