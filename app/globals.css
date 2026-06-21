@@ -94,8 +94,16 @@ img { max-width: 100%; }
   .as-camp-grid { grid-template-columns: 1fr 1fr; }
 }
 
-/* ===== Grafik tygodnia: 7 kolumn; na telefonie węższe i przewijane w bok ===== */
-.as-week-grid { grid-template-columns: repeat(7, minmax(116px, 1fr)); }
+/* ===== Grafik tygodnia: 7 kolumn; na telefonie szersze (czytelne) i przewijane w bok ===== */
+.as-week-grid { grid-template-columns: repeat(7, minmax(152px, 1fr)); }
+
+/* ===== Nagłówek „Pozostali instruktorzy" — na desktopie w osi tekstu Oli (prawa kolumna) ===== */
+.as-instr-heading { display: grid; grid-template-columns: 1fr 1fr; column-gap: 48px; }
+.as-instr-heading > div { grid-column: 2; }
+@media (max-width: 760px) {
+  .as-instr-heading { grid-template-columns: 1fr; text-align: center; }
+  .as-instr-heading > div { grid-column: 1; }
+}
 
 /* ===== Sekcja „o nas": na telefonie kolejność imię → zdjęcia → opis ===== */
 .as-person-grid {

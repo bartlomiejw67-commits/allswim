@@ -521,8 +521,8 @@ export default function Home() {
 
         {/* Nagłówek nad pozostałymi instruktorami */}
         {instructorsData && instructorsData.length > 0 && (
-          <div className="as-reveal" style={{ textAlign: "center", marginTop: 64 }}>
-            <div className="font-fredoka" style={{ ...eyebrow, display: "block" }}>{instructorsHeading}</div>
+          <div className="as-reveal as-instr-heading" style={{ marginTop: 64 }}>
+            <div className="font-fredoka" style={eyebrow}>{instructorsHeading}</div>
           </div>
         )}
 
@@ -580,7 +580,7 @@ export default function Home() {
               {DAY_NAMES.map((d, i) => {
                 const day = scheduleRows.filter((r) => r.dayIdx === i).sort((a, b) => a.time.localeCompare(b.time));
                 return (
-                  <div key={i} style={{ background: "#f8fcff", borderRadius: 14, border: "1px solid #eaf2f8", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 104 }}>
+                  <div key={i} style={{ background: "#f8fcff", borderRadius: 14, border: "1px solid #eaf2f8", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 76 }}>
                     <div className="font-fredoka" style={{ background: C.navy, color: "#fff", fontWeight: 600, fontSize: 13, padding: "9px 10px", textAlign: "center" }}>{d}</div>
                     <div style={{ padding: 8, display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
                       {day.length === 0 ? (
@@ -712,7 +712,7 @@ export default function Home() {
             <p style={{ fontSize: 17, lineHeight: 1.6, color: "#cfe6f5", margin: "16px 0 0" }}>{campsDescription}</p>
             {campsOfferPdfUrl && (
               <a href={campsOfferPdfUrl} target="_blank" rel="noreferrer" className="font-fredoka" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 22, fontWeight: 700, fontSize: 15, color: "#0f5b8f", background: "#ffd27a", borderRadius: 999, padding: "13px 28px", textDecoration: "none", boxShadow: "0 10px 24px rgba(0,0,0,0.28)" }}>
-                ⬇ Pobierz ofertę obozów (PDF)
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flex: "none" }}><path d="M12 3v12M7 11l5 5 5-5M5 21h14" /></svg> Pobierz ofertę obozów (PDF)
               </a>
             )}
           </div>
@@ -768,12 +768,12 @@ export default function Home() {
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 18 }}>
               {regulationsPdfUrl && (
                 <a href={regulationsPdfUrl} target="_blank" rel="noreferrer" className="font-fredoka as-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 600, fontSize: 15, color: "#fff", background: C.orange, borderRadius: 999, padding: "12px 24px", textDecoration: "none", boxShadow: "0 8px 18px rgba(233,161,59,0.32)" }}>
-                  ⬇ Pobierz regulamin (PDF)
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flex: "none" }}><path d="M12 3v12M7 11l5 5 5-5M5 21h14" /></svg> Pobierz regulamin (PDF)
                 </a>
               )}
               {contractPdfUrl && (
                 <a href={contractPdfUrl} target="_blank" rel="noreferrer" className="font-fredoka as-btn-secondary" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 600, fontSize: 15, color: C.navy, background: "#fff", border: "2px solid #6cb4e0", borderRadius: 999, padding: "11px 24px", textDecoration: "none" }}>
-                  ⬇ Pobierz umowę (PDF)
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flex: "none" }}><path d="M12 3v12M7 11l5 5 5-5M5 21h14" /></svg> Pobierz umowę (PDF)
                 </a>
               )}
             </div>
