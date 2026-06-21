@@ -128,6 +128,7 @@ export default function Home() {
   const regData = useQuery(api.regulations.list);
   const galleryImages = useQuery(api.images.list, { category: "gallery" });
   const campImages = useQuery(api.images.list, { category: "camps" });
+  const aboutImages = useQuery(api.images.list, { category: "about" });
   const campsData = useQuery(api.camps.list);
   const submitEnroll = useMutation(api.enrollments.submit);
   const joinWaitlist = useMutation(api.waitlist.join);
@@ -283,6 +284,12 @@ export default function Home() {
     const idx = poolsView.indexOf(name);
     return POOL_PALETTE[(idx < 0 ? 0 : idx) % POOL_PALETTE.length];
   };
+
+  // Dodatkowe zdjęcia do sekcji „o nas" (mały, nachodzący na siebie kolaż).
+  const aboutPhotoItems: { url: string; label: string }[] =
+    (aboutImages ?? [])
+      .filter((g): g is typeof g & { url: string } => !!g.url)
+      .map((g) => ({ url: g.url, label: g.caption || "" }));
 
   // Zdjęcia galerii zajęć (fallback: placeholdery z etykietami).
   const galleryItems: { url: string | null; label: string }[] =
@@ -487,7 +494,7 @@ export default function Home() {
       {/* ============ O MNIE ============ */}
       <section id="onas" style={{ maxWidth: 1120, margin: "0 auto", padding: "78px 22px 20px" }}>
         <div className="as-reveal" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 48, alignItems: "center" }}>
-          <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
             <div style={{ position: "relative", width: "min(380px,92%)", aspectRatio: "4/5" }}>
               <div style={{ position: "absolute", inset: 0, borderRadius: 28, overflow: "hidden", background: aboutImageUrl ? "#eaf4fb" : "repeating-linear-gradient(135deg,#dbecf8,#dbecf8 16px,#eaf4fb 16px,#eaf4fb 32px)", border: "1px solid #d6e7f2", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 20px 44px rgba(15,91,143,0.12)" }}>
                 {aboutImageUrl ? (
@@ -499,6 +506,27 @@ export default function Home() {
               </div>
               <div className="font-fredoka" style={{ position: "absolute", bottom: -16, right: -16, background: C.orange, color: "#fff", borderRadius: 18, padding: "11px 18px", boxShadow: "0 14px 30px rgba(233,161,59,0.35)", fontWeight: 600, fontSize: 15 }}>{aboutBadge}</div>
             </div>
+
+            {/* Dodatkowe zdjęcia — mały, nachodzący na siebie kolaż */}
+            {aboutPhotoItems.length > 0 && (
+              <div style={{ display: "flex", justifyContent: "center", marginTop: 30, paddingLeft: 16 }}>
+                {aboutPhotoItems.slice(0, 3).map((p, i) => {
+                  const rot = [-7, 4, -3][i] ?? 0;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setLightbox({ items: aboutPhotoItems, index: i })}
+                      style={{ marginLeft: i === 0 ? 0 : -16, transform: `rotate(${rot}deg)`, transition: "transform .2s", border: "4px solid #fff", padding: 0, cursor: "pointer", borderRadius: 16, overflow: "hidden", width: "clamp(78px,22vw,108px)", aspectRatio: "1", boxShadow: "0 10px 22px rgba(15,91,143,0.22)", background: "#eaf4fb", zIndex: i }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = `rotate(${rot}deg) scale(1.06)`; e.currentTarget.style.zIndex = "10"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = `rotate(${rot}deg)`; e.currentTarget.style.zIndex = String(i); }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={p.url} alt={p.label || "ALL SWIM"} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
           <div>
             <div className="font-fredoka" style={eyebrow}>{aboutEyebrow}</div>

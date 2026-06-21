@@ -4,7 +4,7 @@ import { requireAdmin } from "./lib";
 import { Doc } from "./_generated/dataModel";
 import { QueryCtx } from "./_generated/server";
 
-const category = v.union(v.literal("gallery"), v.literal("camps"));
+const category = v.union(v.literal("gallery"), v.literal("camps"), v.literal("about"));
 
 async function withUrl(ctx: QueryCtx, img: Doc<"images">) {
   return {
