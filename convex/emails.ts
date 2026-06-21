@@ -108,7 +108,20 @@ export const sendParticipantRemoved = internalAction({
   },
 });
 
-// Do uczestnika: przydzielenie do grupy (po publikacji zatwierdzonej osoby).
+// Do uczestnika: akceptacja BEZ ujawniania grupy (gdy grupa nie ma jeszcze godzin).
+export const sendParticipantAccepted = internalAction({
+  args: { to: v.string(), childName: v.string() },
+  handler: async (_ctx, args) => {
+    const html = layout(
+      "Zgłoszenie zaakceptowane! 🎉",
+      `<p style="margin:0;font-size:15px;line-height:1.6">Dobra wiadomość — zgłoszenie dla <strong>${args.childName}</strong> zostało <strong>zaakceptowane</strong>. Witamy w ALL SWIM! 🌊</p>
+       <p style="margin:12px 0 0;font-size:15px;line-height:1.6">Decyzję o <strong>grupie i godzinach zajęć</strong> przekażemy wkrótce w osobnej wiadomości.</p>${accountLink()}`,
+    );
+    await sendEmail({ to: args.to, subject: "Zgłoszenie zaakceptowane — ALL SWIM", html });
+  },
+});
+
+// Do uczestnika: przyjęcie do grupy WRAZ z grupą i godzinami (gdy są już ustalone).
 export const sendParticipantAssigned = internalAction({
   args: {
     to: v.string(),
@@ -119,11 +132,15 @@ export const sendParticipantAssigned = internalAction({
   },
   handler: async (_ctx, args) => {
     const html = layout(
-      "Zgłoszenie zaakceptowane! 🎉",
-      `<p style="margin:0;font-size:15px;line-height:1.6">Dobra wiadomość — zgłoszenie dla <strong>${args.childName}</strong> zostało <strong>zaakceptowane</strong>. Witamy w ALL SWIM! 🌊</p>
-       <p style="margin:12px 0 0;font-size:15px;line-height:1.6">Decyzję o <strong>grupie i godzinach zajęć</strong> przekażemy wkrótce w osobnej wiadomości.</p>${accountLink()}`,
+      "Dziecko przyjęte na zajęcia! 🎉",
+      `<p style="margin:0 0 10px;font-size:15px;line-height:1.6"><strong>${args.childName}</strong> został przyjęty na zajęcia:</p>
+       <div style="background:#e8f4fb;border-radius:12px;padding:14px 16px;font-size:15px;line-height:1.7">
+         <strong>${args.groupName}</strong><br/>
+         ${args.poolName ? `Basen: ${args.poolName}<br/>` : ""}
+         ${args.times ? `Terminy: ${args.times}` : ""}
+       </div>${accountLink()}`,
     );
-    await sendEmail({ to: args.to, subject: "Zgłoszenie zaakceptowane — ALL SWIM", html });
+    await sendEmail({ to: args.to, subject: "Przyjęcie na zajęcia — ALL SWIM", html });
   },
 });
 

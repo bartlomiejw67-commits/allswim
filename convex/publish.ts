@@ -23,7 +23,7 @@ function formatTimes(
     .join(", ");
 }
 
-type Category = "assigned" | "rejected" | "scheduleChanged" | "removed" | null;
+type Category = "accepted" | "assigned" | "rejected" | "scheduleChanged" | "removed" | null;
 
 // Wylicza, co zmieniło się w zgłoszeniu względem ostatnio opublikowanego stanu.
 async function computeChange(
@@ -46,10 +46,12 @@ async function computeChange(
     category = "rejected";
   } else if (e.status === "approved" && e.assignedGroupId) {
     const sameAssignment = pubStatus === "approved" && !groupChanged;
+    const hasTimes = sig.hash !== "";
     if (!sameAssignment) {
-      // Nowy/zmieniony przydział — powiadamiamy od razu po akceptacji (nawet bez
-      // ustalonych godzin). Gdy później dodasz terminy, rodzic dostanie „zmianę grafiku”.
-      category = "assigned";
+      // Nowy/zmieniony przydział: jeśli grupa ma już godziny — wysyłamy pełne
+      // „przyjęcie” z grupą i terminami; jeśli nie — samą akceptację (bez grupy),
+      // a terminy dojdą później jako „zmiana grafiku”.
+      category = hasTimes ? "assigned" : "accepted";
     } else if (timesChanged) {
       category = "scheduleChanged";
     }
@@ -90,7 +92,7 @@ export const pendingChanges = query({
           groupName: group?.name ?? "—",
           poolName: await groupPoolName(ctx, e.assignedGroupId),
         };
-        if (c.category === "assigned") assigned.push(item);
+        if (c.category === "assigned" || c.category === "accepted") assigned.push(item);
         else scheduleChanged.push(item);
       }
     }
@@ -131,7 +133,13 @@ export const publish = mutation({
         const poolName = await groupPoolName(ctx, e.assignedGroupId);
         const timesText = formatTimes(c.times);
 
-        if (c.category === "assigned" && notifyAssigned) {
+        if (c.category === "accepted" && notifyAssigned) {
+          await ctx.scheduler.runAfter(0, internal.emails.sendParticipantAccepted, {
+            to: e.email,
+            childName: e.name,
+          });
+          mailsQueued++;
+        } else if (c.category === "assigned" && notifyAssigned) {
           await ctx.scheduler.runAfter(0, internal.emails.sendParticipantAssigned, {
             to: e.email,
             childName: e.name,
