@@ -24,7 +24,7 @@ const NAV = [
   { label: "Cennik", href: "#cennik" },
   { label: "Galeria", href: "#galeria" },
   { label: "Obozy", href: "#obozy" },
-  { label: "Regulamin", href: "#regulamin" },
+  { label: "Dokumenty", href: "#regulamin" },
   { label: "Kontakt", href: "#kontakt" },
 ];
 
@@ -141,6 +141,7 @@ export default function Home() {
   const instagramUrl = settings?.instagramUrl || "#";
   const facebookUrl = settings?.facebookUrl || "#";
   const regulationsPdfUrl = settings?.regulationsPdfUrl ?? null;
+  const contractPdfUrl = settings?.contractPdfUrl ?? null;
   const campsOfferPdfUrl = settings?.campsOfferPdfUrl ?? null;
 
   const heroEyebrow = settings?.heroEyebrow || "Szkółka pływacka · Tczew";
@@ -169,8 +170,9 @@ export default function Home() {
   const paymentNote = settings?.paymentNote || "";
   const galleryEyebrow = settings?.galleryEyebrow || "Galeria";
   const galleryTitle = settings?.galleryTitle || "Tak wyglądają nasze zajęcia";
-  const regulationsEyebrow = settings?.regulationsEyebrow || "Regulamin";
-  const regulationsTitle = settings?.regulationsTitle || "Zasady uczestnictwa";
+  const regulationsEyebrow = settings?.regulationsEyebrow || "Dokumenty";
+  const regulationsTitle = settings?.regulationsTitle || "Regulamin i umowa";
+  const instructorsHeading = settings?.instructorsHeading || "Pozostali instruktorzy";
   const campsBadge = settings?.campsBadge || "☀️ Lato 2026";
   const campsTitle = settings?.campsTitle || "Obozy letnie z pływaniem";
   const campsDescription = settings?.campsDescription || "Tydzień pełen wody, zabawy i nauki pływania. Codzienne zajęcia na basenie, gry zespołowe i bezpieczna, ciepła atmosfera.";
@@ -495,19 +497,21 @@ export default function Home() {
 
       {/* ============ O MNIE ============ */}
       <section id="onas" style={{ maxWidth: 1120, margin: "0 auto", padding: "78px 22px 20px" }}>
-        <div className="as-reveal" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 48, alignItems: "center" }}>
-          <div style={{ display: "flex", justifyContent: "center" }}>
+        <div className="as-reveal as-person-grid">
+          <div className="as-person-header">
+            <div className="font-fredoka" style={eyebrow}>{aboutEyebrow}</div>
+            <h2 className="font-fredoka" style={{ ...h2style, fontSize: "clamp(30px,4.5vw,44px)" }}>{aboutTitle}</h2>
+            <div className="font-fredoka" style={{ fontWeight: 600, fontSize: 17, color: "#1b3a4b", marginTop: 8 }}>{aboutRole}</div>
+          </div>
+          <div className="as-person-photo">
             <PhotoCollage
               photos={olaPhotoUrls}
               badge={aboutBadge}
               onOpen={(i) => setLightbox({ items: olaPhotoUrls.map((u) => ({ url: u, label: aboutTitle })), index: i })}
             />
           </div>
-          <div>
-            <div className="font-fredoka" style={eyebrow}>{aboutEyebrow}</div>
-            <h2 className="font-fredoka" style={{ ...h2style, fontSize: "clamp(30px,4.5vw,44px)" }}>{aboutTitle}</h2>
-            <div className="font-fredoka" style={{ fontWeight: 600, fontSize: 17, color: "#1b3a4b", marginTop: 8 }}>{aboutRole}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 20, fontSize: 16, lineHeight: 1.65, color: C.grey }}>
+          <div className="as-person-desc">
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 16, fontSize: 16, lineHeight: 1.65, color: C.grey }}>
               {aboutParagraphs.map((p, i) => (
                 <p key={i} style={{ margin: 0 }}>{p}</p>
               ))}
@@ -515,27 +519,36 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Nagłówek nad pozostałymi instruktorami */}
+        {instructorsData && instructorsData.length > 0 && (
+          <div className="as-reveal" style={{ textAlign: "center", marginTop: 64 }}>
+            <div className="font-fredoka" style={{ ...eyebrow, display: "block" }}>{instructorsHeading}</div>
+          </div>
+        )}
+
         {/* Dodatkowi instruktorzy (Ola wyżej; kolejni pod spodem) */}
         {instructorsData && instructorsData.map((ins) => (
-          <div key={ins._id} className="as-reveal" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 48, alignItems: "center", marginTop: 60 }}>
-            <div style={{ display: "flex", justifyContent: "center" }}>
+          <div key={ins._id} className="as-reveal as-person-grid" style={{ marginTop: 36 }}>
+            <div className="as-person-header">
+              <h3 className="font-fredoka" style={{ fontWeight: 700, fontSize: "clamp(24px,3.6vw,34px)", color: C.navy, margin: 0 }}>{ins.name}</h3>
+              {ins.role && <div className="font-fredoka" style={{ fontWeight: 600, fontSize: 17, color: "#1b3a4b", marginTop: 8 }}>{ins.role}</div>}
+            </div>
+            <div className="as-person-photo">
               <PhotoCollage
                 photos={ins.photoUrls}
                 placeholderEmoji="🧑‍🏫"
                 onOpen={(i) => setLightbox({ items: ins.photoUrls.map((u) => ({ url: u, label: ins.name })), index: i })}
               />
             </div>
-            <div>
-              <h3 className="font-fredoka" style={{ fontWeight: 700, fontSize: "clamp(24px,3.6vw,34px)", color: C.navy, margin: 0 }}>{ins.name}</h3>
-              {ins.role && <div className="font-fredoka" style={{ fontWeight: 600, fontSize: 17, color: "#1b3a4b", marginTop: 8 }}>{ins.role}</div>}
-              {ins.bio && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 18, fontSize: 16, lineHeight: 1.65, color: C.grey }}>
+            {ins.bio && (
+              <div className="as-person-desc">
+                <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 16, fontSize: 16, lineHeight: 1.65, color: C.grey }}>
                   {ins.bio.split(/\n\n+|\n/).filter((p) => p.trim()).map((p, i) => (
                     <p key={i} style={{ margin: 0 }}>{p}</p>
                   ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         ))}
       </section>
@@ -562,7 +575,7 @@ export default function Home() {
           )}
         </div>
         {hasSchedule ? (
-          <div className="as-reveal" style={{ background: "#fff", borderRadius: 24, boxShadow: "0 10px 28px rgba(15,91,143,0.08)", border: "1px solid #eaf2f8", padding: 16 }}>
+          <div className="as-reveal" style={{ background: "#fff", borderRadius: 24, boxShadow: "0 10px 28px rgba(15,91,143,0.08)", border: "1px solid #eaf2f8", padding: 16, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
             <div className="as-week-grid" style={{ display: "grid", gap: 10 }}>
               {DAY_NAMES.map((d, i) => {
                 const day = scheduleRows.filter((r) => r.dayIdx === i).sort((a, b) => a.time.localeCompare(b.time));
@@ -751,10 +764,19 @@ export default function Home() {
         <div className="as-reveal" style={{ textAlign: "center", marginBottom: 34 }}>
           <div className="font-fredoka" style={eyebrow}>{regulationsEyebrow}</div>
           <h2 className="font-fredoka" style={h2style}>{regulationsTitle}</h2>
-          {regulationsPdfUrl && (
-            <a href={regulationsPdfUrl} target="_blank" rel="noreferrer" className="font-fredoka as-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 18, fontWeight: 600, fontSize: 15, color: "#fff", background: C.orange, borderRadius: 999, padding: "12px 24px", textDecoration: "none", boxShadow: "0 8px 18px rgba(233,161,59,0.32)" }}>
-              ⬇ Pobierz regulamin (PDF)
-            </a>
+          {(regulationsPdfUrl || contractPdfUrl) && (
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 18 }}>
+              {regulationsPdfUrl && (
+                <a href={regulationsPdfUrl} target="_blank" rel="noreferrer" className="font-fredoka as-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 600, fontSize: 15, color: "#fff", background: C.orange, borderRadius: 999, padding: "12px 24px", textDecoration: "none", boxShadow: "0 8px 18px rgba(233,161,59,0.32)" }}>
+                  ⬇ Pobierz regulamin (PDF)
+                </a>
+              )}
+              {contractPdfUrl && (
+                <a href={contractPdfUrl} target="_blank" rel="noreferrer" className="font-fredoka as-btn-secondary" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 600, fontSize: 15, color: C.navy, background: "#fff", border: "2px solid #6cb4e0", borderRadius: 999, padding: "11px 24px", textDecoration: "none" }}>
+                  ⬇ Pobierz umowę (PDF)
+                </a>
+              )}
+            </div>
           )}
         </div>
         <div className="as-reveal" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -907,7 +929,7 @@ export default function Home() {
           <div>
             <div className="font-fredoka" style={{ fontWeight: 600, fontSize: 16, marginBottom: 16, color: "#ffd27a" }}>Nawigacja</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 9, fontSize: 15 }}>
-              {[{ l: "Grafik zajęć", h: "#grafik" }, { l: "Cennik", h: "#cennik" }, { l: "Galeria", h: "#galeria" }, { l: "Regulamin", h: "#regulamin" }].map((x) => (
+              {[{ l: "Grafik zajęć", h: "#grafik" }, { l: "Cennik", h: "#cennik" }, { l: "Galeria", h: "#galeria" }, { l: "Dokumenty", h: "#regulamin" }].map((x) => (
                 <a key={x.h} href={x.h} onClick={(e) => { e.preventDefault(); go(x.h.slice(1)); }} className="as-foot-link" style={{ color: "#cfe6f5", textDecoration: "none" }}>{x.l}</a>
               ))}
             </div>

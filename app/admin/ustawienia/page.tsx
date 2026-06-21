@@ -22,6 +22,7 @@ type Form = {
   aboutRole: string;
   aboutText: string;
   aboutBadge: string;
+  instructorsHeading: string;
   gridEyebrow: string;
   gridTitle: string;
   pricesEyebrow: string;
@@ -74,6 +75,7 @@ const EMPTY: Form = {
   aboutRole: "",
   aboutText: "",
   aboutBadge: "",
+  instructorsHeading: "",
   gridEyebrow: "",
   gridTitle: "",
   pricesEyebrow: "",
@@ -192,6 +194,7 @@ export default function AdminSettings() {
         aboutRole: settings?.aboutRole ?? "",
         aboutText: settings?.aboutText ?? "",
         aboutBadge: settings?.aboutBadge ?? "",
+        instructorsHeading: settings?.instructorsHeading ?? "",
         gridEyebrow: settings?.gridEyebrow ?? "",
         gridTitle: settings?.gridTitle ?? "",
         pricesEyebrow: settings?.pricesEyebrow ?? "",
@@ -330,6 +333,9 @@ export default function AdminSettings() {
           <div style={{ height: 12 }} />
           <label style={label}>Plakietka na zdjęciu</label>
           <input value={form.aboutBadge} onChange={(e) => set("aboutBadge", e.target.value)} style={input} placeholder="🏅 Ratownik wodny" />
+          <div style={{ height: 12 }} />
+          <label style={label}>Nadtytuł nad pozostałymi instruktorami</label>
+          <input value={form.instructorsHeading} onChange={(e) => set("instructorsHeading", e.target.value)} style={input} placeholder="Pozostali instruktorzy" />
         </div>
 
         <div style={card}>

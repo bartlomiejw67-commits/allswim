@@ -18,7 +18,10 @@ export const get = query({
     const campsOfferPdfUrl = row.campsOfferPdfId
       ? await ctx.storage.getUrl(row.campsOfferPdfId)
       : null;
-    return { ...row, regulationsPdfUrl, aboutImageUrl, campsOfferPdfUrl };
+    const contractPdfUrl = row.contractPdfId
+      ? await ctx.storage.getUrl(row.contractPdfId)
+      : null;
+    return { ...row, regulationsPdfUrl, aboutImageUrl, campsOfferPdfUrl, contractPdfUrl };
   },
 });
 
@@ -73,6 +76,23 @@ export const setRegulationsPdf = mutation({
   },
 });
 
+// Admin: ustawienie/usunięcie PDF umowy (pomiń storageId, by usunąć/ukryć przycisk).
+export const setContractPdf = mutation({
+  args: { storageId: v.optional(v.id("_storage")) },
+  handler: async (ctx, { storageId }) => {
+    await requireAdmin(ctx);
+    const existing = (await ctx.db.query("siteSettings").take(1))[0];
+    if (existing) {
+      if (existing.contractPdfId && existing.contractPdfId !== storageId) {
+        await ctx.storage.delete(existing.contractPdfId);
+      }
+      await ctx.db.patch("siteSettings", existing._id, { contractPdfId: storageId });
+    } else {
+      await ctx.db.insert("siteSettings", { recruitmentOpen: false, contractPdfId: storageId });
+    }
+  },
+});
+
 // Admin: ustawienie/usunięcie PDF z ofertą obozów (pomiń storageId, by usunąć/ukryć przycisk).
 export const setCampsOfferPdf = mutation({
   args: { storageId: v.optional(v.id("_storage")) },
@@ -112,6 +132,7 @@ export const update = mutation({
     aboutRole: v.optional(v.string()),
     aboutText: v.optional(v.string()),
     aboutBadge: v.optional(v.string()),
+    instructorsHeading: v.optional(v.string()),
     gridEyebrow: v.optional(v.string()),
     gridTitle: v.optional(v.string()),
     pricesEyebrow: v.optional(v.string()),

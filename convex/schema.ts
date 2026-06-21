@@ -183,6 +183,7 @@ export default defineSchema({
     aboutRole: v.optional(v.string()),
     aboutText: v.optional(v.string()),
     aboutBadge: v.optional(v.string()),
+    instructorsHeading: v.optional(v.string()), // nadtytuł nad pozostałymi instruktorami
     // Nagłówki sekcji:
     gridEyebrow: v.optional(v.string()),
     gridTitle: v.optional(v.string()),
@@ -226,6 +227,8 @@ export default defineSchema({
     regulationsPdfId: v.optional(v.id("_storage")),
     // Oferta obozów do pobrania (PDF w Convex storage) — przycisk znika, gdy brak pliku:
     campsOfferPdfId: v.optional(v.id("_storage")),
+    // Umowa do pobrania (PDF) — w sekcji „Dokumenty":
+    contractPdfId: v.optional(v.id("_storage")),
     // Zdjęcie do sekcji „O mnie" (w Convex storage):
     aboutImageId: v.optional(v.id("_storage")),
   }),

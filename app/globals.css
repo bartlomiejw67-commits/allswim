@@ -94,10 +94,35 @@ img { max-width: 100%; }
   .as-camp-grid { grid-template-columns: 1fr 1fr; }
 }
 
-/* ===== Grafik tygodnia: 7 kolumn na desktopie, 2 na telefonie ===== */
-.as-week-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+/* ===== Grafik tygodnia: 7 kolumn; na telefonie węższe i przewijane w bok ===== */
+.as-week-grid { grid-template-columns: repeat(7, minmax(116px, 1fr)); }
+
+/* ===== Sekcja „o nas": na telefonie kolejność imię → zdjęcia → opis ===== */
+.as-person-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: min-content 1fr;
+  grid-template-areas:
+    "photo header"
+    "photo desc";
+  column-gap: 48px;
+  align-items: start;
+}
+.as-person-header { grid-area: header; }
+.as-person-photo { grid-area: photo; display: flex; justify-content: center; }
+.as-person-desc { grid-area: desc; }
 @media (max-width: 760px) {
-  .as-week-grid { grid-template-columns: 1fr 1fr; }
+  .as-person-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "header"
+      "photo"
+      "desc";
+    column-gap: 0;
+  }
+  .as-person-photo { margin: 18px 0 4px; }
+  .as-person-header { text-align: center; }
 }
 
 /* ===== Formularz naboru: na telefonie pola w jednej kolumnie + mniejszy padding ===== */

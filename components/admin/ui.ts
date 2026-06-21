@@ -88,7 +88,7 @@ export const ADMIN_NAV: { href: string; label: string; icon: string }[] = [
   { href: "/admin/poziomy", label: "Poziomy i grupy", icon: "📊" },
   { href: "/admin/grafik-tygodniowy", label: "Grafik", icon: "🗓️" },
   { href: "/admin/cennik", label: "Cennik", icon: "💳" },
-  { href: "/admin/regulamin", label: "Regulamin", icon: "📜" },
+  { href: "/admin/regulamin", label: "Dokumenty", icon: "📜" },
   { href: "/admin/obozy", label: "Obozy", icon: "☀️" },
   { href: "/admin/galeria", label: "Galeria", icon: "🖼️" },
   { href: "/admin/instruktorzy", label: "Instruktorzy", icon: "🧑‍🏫" },
