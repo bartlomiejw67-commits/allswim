@@ -286,11 +286,17 @@ export default function Home() {
     return POOL_PALETTE[(idx < 0 ? 0 : idx) % POOL_PALETTE.length];
   };
 
-  // Dodatkowe zdjęcia do sekcji „o nas" (mały, nachodzący na siebie kolaż).
+  // Zdjęcia Oli do kolażu w „o nas": preferujemy zdjęcia z kategorii „about",
+  // a jeśli ich nie ma — używamy starego pojedynczego zdjęcia z ustawień.
   const aboutPhotoItems: { url: string; label: string }[] =
     (aboutImages ?? [])
       .filter((g): g is typeof g & { url: string } => !!g.url)
       .map((g) => ({ url: g.url, label: g.caption || "" }));
+  const olaPhotoUrls: string[] = aboutPhotoItems.length
+    ? aboutPhotoItems.map((p) => p.url).slice(0, 3)
+    : aboutImageUrl
+      ? [aboutImageUrl]
+      : [];
 
   // Zdjęcia galerii zajęć (fallback: placeholdery z etykietami).
   const galleryItems: { url: string | null; label: string }[] =
@@ -495,39 +501,12 @@ export default function Home() {
       {/* ============ O MNIE ============ */}
       <section id="onas" style={{ maxWidth: 1120, margin: "0 auto", padding: "78px 22px 20px" }}>
         <div className="as-reveal" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 48, alignItems: "center" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <div style={{ position: "relative", width: "min(380px,92%)", aspectRatio: "4/5" }}>
-              <div style={{ position: "absolute", inset: 0, borderRadius: 28, overflow: "hidden", background: aboutImageUrl ? "#eaf4fb" : "repeating-linear-gradient(135deg,#dbecf8,#dbecf8 16px,#eaf4fb 16px,#eaf4fb 32px)", border: "1px solid #d6e7f2", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 20px 44px rgba(15,91,143,0.12)" }}>
-                {aboutImageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={aboutImageUrl} alt="Ola Laskowska" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  <span style={{ fontSize: 52, opacity: 0.55 }} aria-hidden>🏊‍♀️</span>
-                )}
-              </div>
-              <div className="font-fredoka" style={{ position: "absolute", bottom: -16, right: -16, background: C.orange, color: "#fff", borderRadius: 18, padding: "11px 18px", boxShadow: "0 14px 30px rgba(233,161,59,0.35)", fontWeight: 600, fontSize: 15 }}>{aboutBadge}</div>
-            </div>
-
-            {/* Dodatkowe zdjęcia — mały, nachodzący na siebie kolaż */}
-            {aboutPhotoItems.length > 0 && (
-              <div style={{ display: "flex", justifyContent: "center", marginTop: 30, paddingLeft: 16 }}>
-                {aboutPhotoItems.slice(0, 3).map((p, i) => {
-                  const rot = [-7, 4, -3][i] ?? 0;
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => setLightbox({ items: aboutPhotoItems, index: i })}
-                      style={{ marginLeft: i === 0 ? 0 : -16, transform: `rotate(${rot}deg)`, transition: "transform .2s", border: "4px solid #fff", padding: 0, cursor: "pointer", borderRadius: 16, overflow: "hidden", width: "clamp(78px,22vw,108px)", aspectRatio: "1", boxShadow: "0 10px 22px rgba(15,91,143,0.22)", background: "#eaf4fb", zIndex: i }}
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = `rotate(${rot}deg) scale(1.06)`; e.currentTarget.style.zIndex = "10"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = `rotate(${rot}deg)`; e.currentTarget.style.zIndex = String(i); }}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={p.url} alt={p.label || "ALL SWIM"} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <PhotoCollage
+              photos={olaPhotoUrls}
+              badge={aboutBadge}
+              onOpen={(i) => setLightbox({ items: olaPhotoUrls.map((u) => ({ url: u, label: aboutTitle })), index: i })}
+            />
           </div>
           <div>
             <div className="font-fredoka" style={eyebrow}>{aboutEyebrow}</div>
@@ -545,16 +524,11 @@ export default function Home() {
         {instructorsData && instructorsData.map((ins) => (
           <div key={ins._id} className="as-reveal" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 48, alignItems: "center", marginTop: 60 }}>
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <div style={{ position: "relative", width: "min(320px,88%)", aspectRatio: "4/5" }}>
-                <div style={{ position: "absolute", inset: 0, borderRadius: 24, overflow: "hidden", background: ins.photoUrl ? "#eaf4fb" : "repeating-linear-gradient(135deg,#dbecf8,#dbecf8 16px,#eaf4fb 16px,#eaf4fb 32px)", border: "1px solid #d6e7f2", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 16px 36px rgba(15,91,143,0.1)" }}>
-                  {ins.photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={ins.photoUrl} alt={ins.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  ) : (
-                    <span style={{ fontSize: 46, opacity: 0.5 }} aria-hidden>🧑‍🏫</span>
-                  )}
-                </div>
-              </div>
+              <PhotoCollage
+                photos={ins.photoUrls}
+                placeholderEmoji="🧑‍🏫"
+                onOpen={(i) => setLightbox({ items: ins.photoUrls.map((u) => ({ url: u, label: ins.name })), index: i })}
+              />
             </div>
             <div>
               <h3 className="font-fredoka" style={{ fontWeight: 700, fontSize: "clamp(24px,3.6vw,34px)", color: C.navy, margin: 0 }}>{ins.name}</h3>
@@ -1034,6 +1008,51 @@ export default function Home() {
             )}
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+// Kolaż do 3 równych zdjęć, ułożonych pionowo i lekko nachodzących na siebie rogami.
+function PhotoCollage({
+  photos,
+  onOpen,
+  badge,
+  placeholderEmoji = "🏊‍♀️",
+}: {
+  photos: string[];
+  onOpen?: (i: number) => void;
+  badge?: string;
+  placeholderEmoji?: string;
+}) {
+  const ROT = [-4, 3.5, -2.5];
+  const single = photos.length === 1;
+  return (
+    <div style={{ position: "relative", width: "min(300px,90%)", display: "flex", flexDirection: "column", paddingBottom: badge ? 20 : 0 }}>
+      {photos.length === 0 ? (
+        <div style={{ width: "100%", aspectRatio: "4/5", borderRadius: 24, background: "repeating-linear-gradient(135deg,#dbecf8,#dbecf8 16px,#eaf4fb 16px,#eaf4fb 32px)", border: "1px solid #d6e7f2", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 16px 36px rgba(15,91,143,0.1)" }}>
+          <span style={{ fontSize: 48, opacity: 0.5 }} aria-hidden>{placeholderEmoji}</span>
+        </div>
+      ) : (
+        photos.slice(0, 3).map((url, i) => {
+          const rot = single ? 0 : ROT[i];
+          const align = single ? "center" : i % 2 === 0 ? "flex-start" : "flex-end";
+          return (
+            <button
+              key={i}
+              onClick={() => onOpen?.(i)}
+              style={{ alignSelf: align, width: single ? "94%" : "80%", aspectRatio: "4/3", marginTop: i === 0 ? 0 : -26, transform: `rotate(${rot}deg)`, zIndex: i + 1, border: "5px solid #fff", borderRadius: 18, overflow: "hidden", boxShadow: "0 14px 30px rgba(15,91,143,0.22)", padding: 0, cursor: onOpen ? "pointer" : "default", background: "#eaf4fb", transition: "transform .2s" }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = `rotate(${rot}deg) scale(1.04)`; e.currentTarget.style.zIndex = "10"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = `rotate(${rot}deg)`; e.currentTarget.style.zIndex = String(i + 1); }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt="ALL SWIM" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            </button>
+          );
+        })
+      )}
+      {badge && (
+        <div className="font-fredoka" style={{ position: "absolute", bottom: 0, right: 0, background: C.orange, color: "#fff", borderRadius: 16, padding: "10px 16px", boxShadow: "0 14px 30px rgba(233,161,59,0.35)", fontWeight: 600, fontSize: 14, zIndex: 11 }}>{badge}</div>
       )}
     </div>
   );

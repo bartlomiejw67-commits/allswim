@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { A, card, input, label, btnPrimary, btnDanger, btnSecondary, btnGhost } from "@/components/admin/ui";
+import { A, card, input, label, btnPrimary, btnDanger, btnSecondary } from "@/components/admin/ui";
 
 type Instructor = {
   _id: string;
@@ -12,7 +12,7 @@ type Instructor = {
   role: string | null;
   bio: string | null;
   order: number;
-  photoUrl: string | null;
+  photoUrls: string[];
 };
 
 export default function Page() {
@@ -33,7 +33,8 @@ export default function Page() {
       <h1 className="font-fredoka" style={{ fontSize: 28, color: A.navy, margin: "0 0 4px" }}>Instruktorzy</h1>
       <p style={{ color: A.grey, fontSize: 14, margin: "0 0 20px", maxWidth: 760 }}>
         Profile pokazują się w sekcji <strong>„O nas”</strong> na stronie. Pierwsza osoba (Ola) pochodzi z zakładki
-        <strong> Ustawienia → sekcja o nas</strong>; tutaj dodajesz <strong>kolejnych instruktorów</strong> (zdjęcie, imię, rola, opis).
+        <strong> Ustawienia → sekcja o nas</strong> (a jej zdjęcia z <strong>Galeria → „O nas”</strong>); tutaj dodajesz
+        <strong> kolejnych instruktorów</strong> — każdemu można wgrać <strong>do 3 zdjęć</strong> (tworzą kolaż).
       </p>
 
       <div style={{ ...card, marginBottom: 22, maxWidth: 760, display: "flex", gap: 10, alignItems: "flex-end", flexWrap: "wrap" }}>
@@ -60,18 +61,22 @@ function InstructorCard({ it }: { it: Instructor }) {
   const update = useMutation(api.instructors.update);
   const remove = useMutation(api.instructors.remove);
   const generateUploadUrl = useMutation(api.images.generateUploadUrl);
-  const setPhoto = useMutation(api.instructors.setPhoto);
+  const addPhoto = useMutation(api.instructors.addPhoto);
+  const removePhotoAt = useMutation(api.instructors.removePhotoAt);
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
-  async function onFile(files: FileList | null) {
+  async function onFiles(files: FileList | null) {
     if (!files || !files.length) return;
     setUploading(true);
     try {
-      const url = await generateUploadUrl();
-      const res = await fetch(url, { method: "POST", headers: { "Content-Type": files[0].type }, body: files[0] });
-      const json = (await res.json()) as { storageId: string };
-      await setPhoto({ id: it._id as Id<"instructors">, storageId: json.storageId as Id<"_storage"> });
+      const free = 3 - it.photoUrls.length;
+      for (const file of Array.from(files).slice(0, Math.max(0, free))) {
+        const url = await generateUploadUrl();
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
+        const json = (await res.json()) as { storageId: string };
+        await addPhoto({ id: it._id as Id<"instructors">, storageId: json.storageId as Id<"_storage"> });
+      }
     } catch (e) {
       alert((e as { data?: string; message?: string }).data ?? "Nie udało się wgrać zdjęcia.");
     } finally {
@@ -80,24 +85,28 @@ function InstructorCard({ it }: { it: Instructor }) {
     }
   }
 
+  const canAdd = it.photoUrls.length < 3;
+
   return (
     <div style={{ ...card, display: "flex", gap: 16, flexWrap: "wrap" }}>
-      <div style={{ flex: "none", width: 120 }}>
-        <div style={{ width: 120, height: 120, borderRadius: 14, overflow: "hidden", background: "#eaf4fb", border: "1px solid #d6e7f2", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {it.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={it.photoUrl} alt={it.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          ) : (
-            <span style={{ fontSize: 32, opacity: 0.5 }} aria-hidden>🧑‍🏫</span>
+      <div style={{ flex: "none", width: 200 }}>
+        <label style={label}>Zdjęcia (maks. 3)</label>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {it.photoUrls.map((u, i) => (
+            <div key={i} style={{ position: "relative", width: 88, height: 88, borderRadius: 12, overflow: "hidden", border: "1px solid #d6e7f2", background: "#eaf4fb" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={u} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <button title="Usuń zdjęcie" onClick={() => { if (confirm("Usunąć to zdjęcie?")) removePhotoAt({ id: it._id as Id<"instructors">, index: i }); }} style={{ position: "absolute", top: 4, right: 4, width: 24, height: 24, borderRadius: "50%", border: "none", background: "rgba(180,35,42,0.92)", color: "#fff", cursor: "pointer", fontWeight: 800, lineHeight: 1, fontSize: 14 }}>×</button>
+            </div>
+          ))}
+          {it.photoUrls.length === 0 && (
+            <div style={{ width: 88, height: 88, borderRadius: 12, background: "#eaf4fb", border: "1px solid #d6e7f2", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, opacity: 0.5 }}>🧑‍🏫</div>
           )}
         </div>
-        <input ref={fileRef} type="file" accept="image/*" onChange={(e) => onFile(e.target.files)} style={{ display: "none" }} />
-        <button style={{ ...btnSecondary, width: "100%", marginTop: 8, padding: "7px 10px", fontSize: 13 }} disabled={uploading} onClick={() => fileRef.current?.click()}>
-          {uploading ? "Wgrywanie…" : it.photoUrl ? "Wymień zdjęcie" : "Wgraj zdjęcie"}
+        <input ref={fileRef} type="file" accept="image/*" multiple onChange={(e) => onFiles(e.target.files)} style={{ display: "none" }} />
+        <button style={{ ...btnSecondary, width: "100%", marginTop: 8, padding: "7px 10px", fontSize: 13, opacity: canAdd ? 1 : 0.5 }} disabled={uploading || !canAdd} onClick={() => fileRef.current?.click()}>
+          {uploading ? "Wgrywanie…" : canAdd ? `+ Dodaj zdjęcie (${it.photoUrls.length}/3)` : "Komplet (3/3)"}
         </button>
-        {it.photoUrl && (
-          <button style={{ ...btnGhost, width: "100%", marginTop: 6, padding: "6px 10px", fontSize: 12 }} onClick={() => { if (confirm("Usunąć zdjęcie?")) setPhoto({ id: it._id as Id<"instructors"> }); }}>Usuń zdjęcie</button>
-        )}
       </div>
 
       <div style={{ flex: 1, minWidth: 240, display: "flex", flexDirection: "column", gap: 8 }}>

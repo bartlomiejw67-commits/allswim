@@ -134,7 +134,8 @@ export default defineSchema({
     name: v.string(),
     role: v.optional(v.string()),
     bio: v.optional(v.string()),
-    photoId: v.optional(v.id("_storage")),
+    photoId: v.optional(v.id("_storage")), // legacy (pojedyncze) — zachowane dla zgodności
+    photoIds: v.optional(v.array(v.id("_storage"))), // kolaż: do 3 zdjęć
     order: v.number(),
   }).index("by_order", ["order"]),
 
