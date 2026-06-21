@@ -129,6 +129,15 @@ export default defineSchema({
     .index("by_featured", ["featured"])
     .index("by_category_and_order", ["category", "order"]),
 
+  // --- Instruktorzy (sekcja „o nas” — Ola + dodatkowe osoby) ---
+  instructors: defineTable({
+    name: v.string(),
+    role: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    photoId: v.optional(v.id("_storage")),
+    order: v.number(),
+  }).index("by_order", ["order"]),
+
   // --- Obozy letnie (informacyjne) ---
   camps: defineTable({
     title: v.string(),

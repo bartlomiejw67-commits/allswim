@@ -15,6 +15,7 @@ import type * as enrollments from "../enrollments.js";
 import type * as groups from "../groups.js";
 import type * as http from "../http.js";
 import type * as images from "../images.js";
+import type * as instructors from "../instructors.js";
 import type * as levels from "../levels.js";
 import type * as lib from "../lib.js";
 import type * as pools from "../pools.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   groups: typeof groups;
   http: typeof http;
   images: typeof images;
+  instructors: typeof instructors;
   levels: typeof levels;
   lib: typeof lib;
   pools: typeof pools;

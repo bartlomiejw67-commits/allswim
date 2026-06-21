@@ -129,6 +129,7 @@ export default function Home() {
   const galleryImages = useQuery(api.images.list, { category: "gallery" });
   const campImages = useQuery(api.images.list, { category: "camps" });
   const aboutImages = useQuery(api.images.list, { category: "about" });
+  const instructorsData = useQuery(api.instructors.list);
   const campsData = useQuery(api.camps.list);
   const submitEnroll = useMutation(api.enrollments.submit);
   const joinWaitlist = useMutation(api.waitlist.join);
@@ -539,6 +540,35 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Dodatkowi instruktorzy (Ola wyżej; kolejni pod spodem) */}
+        {instructorsData && instructorsData.map((ins) => (
+          <div key={ins._id} className="as-reveal" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 48, alignItems: "center", marginTop: 60 }}>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <div style={{ position: "relative", width: "min(320px,88%)", aspectRatio: "4/5" }}>
+                <div style={{ position: "absolute", inset: 0, borderRadius: 24, overflow: "hidden", background: ins.photoUrl ? "#eaf4fb" : "repeating-linear-gradient(135deg,#dbecf8,#dbecf8 16px,#eaf4fb 16px,#eaf4fb 32px)", border: "1px solid #d6e7f2", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 16px 36px rgba(15,91,143,0.1)" }}>
+                  {ins.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={ins.photoUrl} alt={ins.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <span style={{ fontSize: 46, opacity: 0.5 }} aria-hidden>🧑‍🏫</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-fredoka" style={{ fontWeight: 700, fontSize: "clamp(24px,3.6vw,34px)", color: C.navy, margin: 0 }}>{ins.name}</h3>
+              {ins.role && <div className="font-fredoka" style={{ fontWeight: 600, fontSize: 17, color: "#1b3a4b", marginTop: 8 }}>{ins.role}</div>}
+              {ins.bio && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 18, fontSize: 16, lineHeight: 1.65, color: C.grey }}>
+                  {ins.bio.split(/\n\n+|\n/).filter((p) => p.trim()).map((p, i) => (
+                    <p key={i} style={{ margin: 0 }}>{p}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </section>
 
       {/* ============ GRAFIK ============ */}

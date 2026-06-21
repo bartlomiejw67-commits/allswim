@@ -91,4 +91,5 @@ export const ADMIN_NAV: { href: string; label: string; icon: string }[] = [
   { href: "/admin/regulamin", label: "Regulamin", icon: "📜" },
   { href: "/admin/obozy", label: "Obozy", icon: "☀️" },
   { href: "/admin/galeria", label: "Galeria", icon: "🖼️" },
+  { href: "/admin/instruktorzy", label: "Instruktorzy", icon: "🧑‍🏫" },
 ];
