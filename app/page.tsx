@@ -130,7 +130,6 @@ export default function Home() {
   const campImages = useQuery(api.images.list, { category: "camps" });
   const aboutImages = useQuery(api.images.list, { category: "about" });
   const instructorsData = useQuery(api.instructors.list);
-  const campsData = useQuery(api.camps.list);
   const submitEnroll = useMutation(api.enrollments.submit);
   const joinWaitlist = useMutation(api.waitlist.join);
 
@@ -175,8 +174,6 @@ export default function Home() {
   const campsBadge = settings?.campsBadge || "☀️ Lato 2026";
   const campsTitle = settings?.campsTitle || "Obozy letnie z pływaniem";
   const campsDescription = settings?.campsDescription || "Tydzień pełen wody, zabawy i nauki pływania. Codzienne zajęcia na basenie, gry zespołowe i bezpieczna, ciepła atmosfera.";
-  const campsUpcomingHeading = settings?.campsUpcomingHeading || "Najbliższe turnusy";
-  const campsEmptyText = settings?.campsEmptyText || "Aktualnie nie mamy ogłoszonych turnusów. Planujemy obozy latem — zostaw kontakt, a damy znać, gdy ruszą zapisy. 🌊";
   const campsPhotosHeading = settings?.campsPhotosHeading || "Z naszych obozów";
   const formTitle = settings?.formTitle || "Zapisz dziecko na zajęcia";
   const formSubtitle = settings?.formSubtitle || "Wypełnij krótki formularz — odezwiemy się z propozycją grupy i terminu w ciągu 2 dni roboczych.";
@@ -319,8 +316,6 @@ export default function Home() {
       ? campPhotoItems
       : campPhotoItems.slice(0, 4)
     : flagship;
-
-  const camps = campsData ?? [];
 
   return (
     <div style={{ fontFamily: "var(--font-nunito), sans-serif", color: "#1b3a4b", background: "#f4fafe", overflowX: "hidden" }}>
@@ -706,29 +701,6 @@ export default function Home() {
               <a href={campsOfferPdfUrl} target="_blank" rel="noreferrer" className="font-fredoka" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 22, fontWeight: 700, fontSize: 15, color: "#0f5b8f", background: "#ffd27a", borderRadius: 999, padding: "13px 28px", textDecoration: "none", boxShadow: "0 10px 24px rgba(0,0,0,0.28)" }}>
                 ⬇ Pobierz ofertę obozów (PDF)
               </a>
-            )}
-          </div>
-
-          {/* Aktualności — planowane turnusy (lub komunikat o braku) */}
-          <div className="as-reveal" style={{ marginBottom: 40 }}>
-            <h3 className="font-fredoka" style={{ fontWeight: 700, fontSize: 22, color: "#fff", textAlign: "center", margin: "0 0 18px" }}>{campsUpcomingHeading}</h3>
-            {camps.length > 0 ? (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 18 }}>
-                {camps.map((c) => (
-                  <div key={c._id} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "24px 22px" }}>
-                    <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 20, color: "#fff" }}>{c.title}</div>
-                    {c.period && <div style={{ fontWeight: 700, fontSize: 14, color: "#ffd27a", marginTop: 8 }}>📅 {c.period}</div>}
-                    {c.location && <div style={{ fontSize: 14, color: "#cfe6f5", marginTop: 4 }}>📍 {c.location}</div>}
-                    {c.price && <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 24, color: "#ffd27a", marginTop: 10 }}>{c.price}</div>}
-                    {c.description && <p style={{ fontSize: 15, lineHeight: 1.55, color: "#cfe6f5", margin: "10px 0 0" }}>{c.description}</p>}
-                    {c.contactNote && <div style={{ fontSize: 13, color: "#a8d4ef", marginTop: 10 }}>{c.contactNote}</div>}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{ background: "rgba(255,255,255,0.08)", border: "1px dashed rgba(255,255,255,0.3)", borderRadius: 18, padding: "22px 24px", textAlign: "center", color: "#cfe6f5", fontSize: 16, maxWidth: 640, margin: "0 auto" }}>
-                {campsEmptyText}
-              </div>
             )}
           </div>
 
