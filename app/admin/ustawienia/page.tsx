@@ -144,7 +144,9 @@ export default function AdminSettings() {
   const settings = useQuery(api.settings.get);
   const update = useMutation(api.settings.update);
   const generateUploadUrl = useMutation(api.images.generateUploadUrl);
-  const setAboutImage = useMutation(api.settings.setAboutImage);
+  const aboutPhotos = useQuery(api.images.list, { category: "about" });
+  const addImage = useMutation(api.images.add);
+  const removeImage = useMutation(api.images.remove);
   const [form, setForm] = useState<Form>(EMPTY);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -152,15 +154,18 @@ export default function AdminSettings() {
   const aboutFileRef = useRef<HTMLInputElement>(null);
   const [aboutUploading, setAboutUploading] = useState(false);
 
-  async function onAboutPhoto(files: FileList | null) {
-    const file = files?.[0];
-    if (!file) return;
+  async function onAboutPhotos(files: FileList | null) {
+    if (!files || !files.length) return;
+    const free = Math.max(0, 3 - (aboutPhotos?.length ?? 0));
+    if (free === 0) return;
     setAboutUploading(true);
     try {
-      const url = await generateUploadUrl();
-      const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
-      const json = (await res.json()) as { storageId: string };
-      await setAboutImage({ storageId: json.storageId as Id<"_storage"> });
+      for (const file of Array.from(files).slice(0, free)) {
+        const url = await generateUploadUrl();
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
+        const json = (await res.json()) as { storageId: string };
+        await addImage({ storageId: json.storageId as Id<"_storage">, category: "about" });
+      }
     } catch (e) {
       alert((e as { data?: string; message?: string }).data ?? "Nie udało się wgrać zdjęcia.");
     } finally {
@@ -285,26 +290,32 @@ export default function AdminSettings() {
 
         <div style={card}>
           <h2 className="font-fredoka" style={{ fontSize: 17, color: A.navy, margin: "0 0 12px" }}>Sekcja „O mnie”</h2>
-          <label style={label}>Zdjęcie</label>
-          <div style={{ display: "flex", gap: 14, alignItems: "center", marginBottom: 14 }}>
-            <div style={{ width: 96, height: 120, borderRadius: 14, overflow: "hidden", border: "1px solid #d6e7f2", background: "#eef4f8", flex: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {settings?.aboutImageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={settings.aboutImageUrl} alt="Ola" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <label style={label}>Zdjęcia (kolaż, do 3)</label>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+            {(aboutPhotos ?? []).map((img) => (
+              <div key={img._id} style={{ position: "relative", width: 88, height: 88, borderRadius: 12, overflow: "hidden", border: "1px solid #d6e7f2", background: "#eef4f8" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img.url ?? ""} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <button type="button" title="Usuń zdjęcie" onClick={() => { if (confirm("Usunąć to zdjęcie?")) removeImage({ id: img._id as Id<"images"> }); }} style={{ position: "absolute", top: 4, right: 4, width: 24, height: 24, borderRadius: "50%", border: "none", background: "rgba(180,35,42,0.92)", color: "#fff", cursor: "pointer", fontWeight: 800, lineHeight: 1, fontSize: 14 }}>×</button>
+              </div>
+            ))}
+            {(aboutPhotos?.length ?? 0) === 0 && (
+              settings?.aboutImageUrl ? (
+                <div style={{ width: 88, height: 88, borderRadius: 12, overflow: "hidden", border: "1px solid #d6e7f2", background: "#eef4f8" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={settings.aboutImageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
               ) : (
-                <span style={{ fontSize: 11, color: "#7fa3bd", fontFamily: "monospace", textAlign: "center", padding: 6 }}>brak zdjęcia</span>
-              )}
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
-              <input ref={aboutFileRef} type="file" accept="image/*" onChange={(e) => onAboutPhoto(e.target.files)} style={{ display: "none" }} />
-              <button type="button" style={btnSecondary} disabled={aboutUploading} onClick={() => aboutFileRef.current?.click()}>
-                {aboutUploading ? "Wgrywanie…" : settings?.aboutImageUrl ? "Zmień zdjęcie" : "Wgraj zdjęcie"}
-              </button>
-              {settings?.aboutImageUrl && (
-                <button type="button" style={btnDanger} disabled={aboutUploading} onClick={() => { if (confirm("Usunąć zdjęcie?")) setAboutImage({}); }}>Usuń zdjęcie</button>
-              )}
-              <span style={{ fontSize: 12, color: A.grey }}>Najlepiej pionowe, proporcje ~4:5. Zapisuje się od razu.</span>
-            </div>
+                <div style={{ width: 88, height: 88, borderRadius: 12, background: "#eef4f8", border: "1px solid #d6e7f2", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#7fa3bd" }}>brak</div>
+              )
+            )}
+          </div>
+          <input ref={aboutFileRef} type="file" accept="image/*" multiple onChange={(e) => onAboutPhotos(e.target.files)} style={{ display: "none" }} />
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginBottom: 14 }}>
+            <button type="button" style={{ ...btnSecondary, opacity: (aboutPhotos?.length ?? 0) < 3 ? 1 : 0.5 }} disabled={aboutUploading || (aboutPhotos?.length ?? 0) >= 3} onClick={() => aboutFileRef.current?.click()}>
+              {aboutUploading ? "Wgrywanie…" : (aboutPhotos?.length ?? 0) < 3 ? `+ Dodaj zdjęcie (${aboutPhotos?.length ?? 0}/3)` : "Komplet (3/3)"}
+            </button>
+            <span style={{ fontSize: 12, color: A.grey }}>Tworzą kolaż w sekcji „O nas”. Najlepiej pionowe. Zapisuje się od razu.</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div><label style={label}>Nadtytuł</label><input value={form.aboutEyebrow} onChange={(e) => set("aboutEyebrow", e.target.value)} style={input} placeholder="O mnie" /></div>

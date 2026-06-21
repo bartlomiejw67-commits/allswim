@@ -44,7 +44,6 @@ export default function Page() {
       <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
         <button onClick={() => setCat("gallery")} style={{ ...btnGhost, ...(cat === "gallery" ? { background: A.navy, color: "#fff" } : {}) }}>Galeria</button>
         <button onClick={() => setCat("camps")} style={{ ...btnGhost, ...(cat === "camps" ? { background: A.navy, color: "#fff" } : {}) }}>Obozy</button>
-        <button onClick={() => setCat("about")} style={{ ...btnGhost, ...(cat === "about" ? { background: A.navy, color: "#fff" } : {}) }}>O nas (dodatkowe)</button>
       </div>
 
       <div style={{ ...card, borderStyle: "dashed", borderColor: "#c3d4df", marginBottom: 20 }}>
