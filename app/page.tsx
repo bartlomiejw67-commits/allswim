@@ -1041,12 +1041,12 @@ function PhotoCollage({
             <button
               key={i}
               onClick={() => onOpen?.(i)}
-              style={{ alignSelf: align, width: single ? "94%" : "80%", aspectRatio: "4/3", marginTop: i === 0 ? 0 : -26, transform: `rotate(${rot}deg)`, zIndex: i + 1, border: "5px solid #fff", borderRadius: 18, overflow: "hidden", boxShadow: "0 14px 30px rgba(15,91,143,0.22)", padding: 0, cursor: onOpen ? "pointer" : "default", background: "#eaf4fb", transition: "transform .2s" }}
+              style={{ alignSelf: align, width: single ? "92%" : "78%", marginTop: i === 0 ? 0 : -22, transform: `rotate(${rot}deg)`, zIndex: i + 1, border: "5px solid #fff", borderRadius: 18, overflow: "hidden", boxShadow: "0 14px 30px rgba(15,91,143,0.22)", padding: 0, cursor: onOpen ? "pointer" : "default", background: "#eaf4fb", transition: "transform .2s", display: "block", lineHeight: 0 }}
               onMouseEnter={(e) => { e.currentTarget.style.transform = `rotate(${rot}deg) scale(1.04)`; e.currentTarget.style.zIndex = "10"; }}
               onMouseLeave={(e) => { e.currentTarget.style.transform = `rotate(${rot}deg)`; e.currentTarget.style.zIndex = String(i + 1); }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="ALL SWIM" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <img src={url} alt="ALL SWIM" style={{ width: "100%", height: "auto", objectFit: "contain", display: "block" }} />
             </button>
           );
         })
