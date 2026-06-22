@@ -716,7 +716,7 @@ export default function Home() {
             <h2 className="font-fredoka" style={{ fontWeight: 700, fontSize: "clamp(28px,4vw,42px)", margin: "16px 0 0" }}>{campsTitle}</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 14, margin: "16px 0 0" }}>
               {campsParagraphs.map((p, i) => (
-                <p key={i} style={{ fontSize: 17, lineHeight: 1.65, color: "#cfe6f5", margin: 0, textAlign: "left" }}>{p}</p>
+                <p key={i} style={{ fontSize: 17, lineHeight: 1.65, color: "#cfe6f5", margin: 0, textAlign: "center" }}>{p}</p>
               ))}
             </div>
 
