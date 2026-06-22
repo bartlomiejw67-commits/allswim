@@ -21,7 +21,10 @@ export const get = query({
     const contractPdfUrl = row.contractPdfId
       ? await ctx.storage.getUrl(row.contractPdfId)
       : null;
-    return { ...row, regulationsPdfUrl, aboutImageUrl, campsOfferPdfUrl, contractPdfUrl };
+    const campsPosterUrl = row.campsPosterId
+      ? await ctx.storage.getUrl(row.campsPosterId)
+      : null;
+    return { ...row, regulationsPdfUrl, aboutImageUrl, campsOfferPdfUrl, contractPdfUrl, campsPosterUrl };
   },
 });
 
@@ -110,6 +113,23 @@ export const setCampsOfferPdf = mutation({
   },
 });
 
+// Admin: ustawienie/usunięcie plakatu kolonii (zdjęcie pod opisem; pomiń storageId, by usunąć).
+export const setCampsPoster = mutation({
+  args: { storageId: v.optional(v.id("_storage")) },
+  handler: async (ctx, { storageId }) => {
+    await requireAdmin(ctx);
+    const existing = (await ctx.db.query("siteSettings").take(1))[0];
+    if (existing) {
+      if (existing.campsPosterId && existing.campsPosterId !== storageId) {
+        await ctx.storage.delete(existing.campsPosterId);
+      }
+      await ctx.db.patch("siteSettings", existing._id, { campsPosterId: storageId });
+    } else {
+      await ctx.db.insert("siteSettings", { recruitmentOpen: false, campsPosterId: storageId });
+    }
+  },
+});
+
 // Aktualizacja ustawień (tylko admin). Upsert pojedynczego dokumentu.
 export const update = mutation({
   args: {
@@ -149,6 +169,9 @@ export const update = mutation({
     campsBadge: v.optional(v.string()),
     campsTitle: v.optional(v.string()),
     campsDescription: v.optional(v.string()),
+    campsDates: v.optional(v.string()),
+    campsLocation: v.optional(v.string()),
+    campsPrice: v.optional(v.string()),
     campsUpcomingHeading: v.optional(v.string()),
     campsEmptyText: v.optional(v.string()),
     campsPhotosHeading: v.optional(v.string()),

@@ -201,6 +201,9 @@ export default defineSchema({
     campsBadge: v.optional(v.string()),
     campsTitle: v.optional(v.string()),
     campsDescription: v.optional(v.string()),
+    campsDates: v.optional(v.string()), // termin kolonii
+    campsLocation: v.optional(v.string()), // miejscowość
+    campsPrice: v.optional(v.string()), // cena
     campsUpcomingHeading: v.optional(v.string()),
     campsEmptyText: v.optional(v.string()),
     campsPhotosHeading: v.optional(v.string()),
@@ -229,6 +232,8 @@ export default defineSchema({
     campsOfferPdfId: v.optional(v.id("_storage")),
     // Umowa do pobrania (PDF) — w sekcji „Dokumenty":
     contractPdfId: v.optional(v.id("_storage")),
+    // Plakat kolonii (zdjęcie pod opisem w sekcji obozów):
+    campsPosterId: v.optional(v.id("_storage")),
     // Zdjęcie do sekcji „O mnie" (w Convex storage):
     aboutImageId: v.optional(v.id("_storage")),
   }),

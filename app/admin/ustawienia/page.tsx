@@ -39,6 +39,9 @@ type Form = {
   campsBadge: string;
   campsTitle: string;
   campsDescription: string;
+  campsDates: string;
+  campsLocation: string;
+  campsPrice: string;
   campsUpcomingHeading: string;
   campsEmptyText: string;
   campsPhotosHeading: string;
@@ -92,6 +95,9 @@ const EMPTY: Form = {
   campsBadge: "",
   campsTitle: "",
   campsDescription: "",
+  campsDates: "",
+  campsLocation: "",
+  campsPrice: "",
   campsUpcomingHeading: "",
   campsEmptyText: "",
   campsPhotosHeading: "",
@@ -155,6 +161,26 @@ export default function AdminSettings() {
   const [saved, setSaved] = useState(false);
   const aboutFileRef = useRef<HTMLInputElement>(null);
   const [aboutUploading, setAboutUploading] = useState(false);
+  const setCampsPoster = useMutation(api.settings.setCampsPoster);
+  const posterRef = useRef<HTMLInputElement>(null);
+  const [posterUploading, setPosterUploading] = useState(false);
+
+  async function onPosterFile(files: FileList | null) {
+    const file = files?.[0];
+    if (!file) return;
+    setPosterUploading(true);
+    try {
+      const url = await generateUploadUrl();
+      const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
+      const json = (await res.json()) as { storageId: string };
+      await setCampsPoster({ storageId: json.storageId as Id<"_storage"> });
+    } catch (e) {
+      alert((e as { data?: string; message?: string }).data ?? "Nie udało się wgrać plakatu.");
+    } finally {
+      setPosterUploading(false);
+      if (posterRef.current) posterRef.current.value = "";
+    }
+  }
 
   async function onAboutPhotos(files: FileList | null) {
     if (!files || !files.length) return;
@@ -211,6 +237,9 @@ export default function AdminSettings() {
         campsBadge: settings?.campsBadge ?? "",
         campsTitle: settings?.campsTitle ?? "",
         campsDescription: settings?.campsDescription ?? "",
+        campsDates: settings?.campsDates ?? "",
+        campsLocation: settings?.campsLocation ?? "",
+        campsPrice: settings?.campsPrice ?? "",
         campsUpcomingHeading: settings?.campsUpcomingHeading ?? "",
         campsEmptyText: settings?.campsEmptyText ?? "",
         campsPhotosHeading: settings?.campsPhotosHeading ?? "",
@@ -357,8 +386,27 @@ export default function AdminSettings() {
             <div><label style={label}>Tytuł</label><input value={form.campsTitle} onChange={(e) => set("campsTitle", e.target.value)} style={input} /></div>
           </div>
           <div style={{ height: 12 }} />
-          <label style={label}>Opis obozów</label>
-          <textarea value={form.campsDescription} onChange={(e) => set("campsDescription", e.target.value)} rows={2} style={{ ...input, resize: "vertical" }} />
+          <label style={label}>Opis obozów <span style={{ fontWeight: 400, color: A.grey }}>(Enter = nowy akapit)</span></label>
+          <textarea value={form.campsDescription} onChange={(e) => set("campsDescription", e.target.value)} rows={6} style={{ ...input, resize: "vertical", lineHeight: 1.5 }} />
+          <div style={{ height: 12 }} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            <div><label style={label}>Termin</label><input value={form.campsDates} onChange={(e) => set("campsDates", e.target.value)} style={input} placeholder="np. 5–12 lipca 2026" /></div>
+            <div><label style={label}>Miejscowość</label><input value={form.campsLocation} onChange={(e) => set("campsLocation", e.target.value)} style={input} placeholder="np. Łapino" /></div>
+            <div><label style={label}>Cena</label><input value={form.campsPrice} onChange={(e) => set("campsPrice", e.target.value)} style={input} placeholder="np. 1500 zł" /></div>
+          </div>
+          <div style={{ height: 12 }} />
+          <label style={label}>Plakat kolonii (zdjęcie pod opisem)</label>
+          <input ref={posterRef} type="file" accept="image/*" onChange={(e) => onPosterFile(e.target.files)} style={{ display: "none" }} />
+          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            {settings?.campsPosterUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={settings.campsPosterUrl} alt="" style={{ width: 70, height: 70, objectFit: "cover", borderRadius: 10, border: "1px solid #d6e7f2" }} />
+            )}
+            <button type="button" style={btnSecondary} disabled={posterUploading} onClick={() => posterRef.current?.click()}>{posterUploading ? "Wgrywanie…" : settings?.campsPosterUrl ? "Wymień plakat" : "Wgraj plakat"}</button>
+            {settings?.campsPosterUrl && (
+              <button type="button" style={btnDanger} onClick={() => { if (confirm("Usunąć plakat?")) setCampsPoster({}); }}>Usuń plakat</button>
+            )}
+          </div>
           <div style={{ height: 12 }} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div><label style={label}>Nagłówek „turnusy”</label><input value={form.campsUpcomingHeading} onChange={(e) => set("campsUpcomingHeading", e.target.value)} style={input} /></div>

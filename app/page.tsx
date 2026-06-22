@@ -176,6 +176,11 @@ export default function Home() {
   const campsBadge = settings?.campsBadge || "☀️ Lato 2026";
   const campsTitle = settings?.campsTitle || "Obozy letnie z pływaniem";
   const campsDescription = settings?.campsDescription || "Tydzień pełen wody, zabawy i nauki pływania. Codzienne zajęcia na basenie, gry zespołowe i bezpieczna, ciepła atmosfera.";
+  const campsParagraphs = campsDescription.split(/\n\n+|\n/).filter((p) => p.trim());
+  const campsDates = settings?.campsDates || "";
+  const campsLocation = settings?.campsLocation || "";
+  const campsPrice = settings?.campsPrice || "";
+  const campsPosterUrl = settings?.campsPosterUrl ?? null;
   const campsPhotosHeading = settings?.campsPhotosHeading || "Z naszych obozów";
   const formTitle = settings?.formTitle || "Zapisz dziecko na zajęcia";
   const formSubtitle = settings?.formSubtitle || "Wypełnij krótki formularz — odezwiemy się z propozycją grupy i terminu w ciągu 2 dni roboczych.";
@@ -709,7 +714,38 @@ export default function Home() {
           <div className="as-reveal" style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 36px" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,210,122,0.18)", borderRadius: 999, padding: "7px 15px", fontWeight: 800, fontSize: 14, color: "#ffd27a" }}>{campsBadge}</div>
             <h2 className="font-fredoka" style={{ fontWeight: 700, fontSize: "clamp(28px,4vw,42px)", margin: "16px 0 0" }}>{campsTitle}</h2>
-            <p style={{ fontSize: 17, lineHeight: 1.6, color: "#cfe6f5", margin: "16px 0 0" }}>{campsDescription}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, margin: "16px 0 0" }}>
+              {campsParagraphs.map((p, i) => (
+                <p key={i} style={{ fontSize: 17, lineHeight: 1.65, color: "#cfe6f5", margin: 0, textAlign: "left" }}>{p}</p>
+              ))}
+            </div>
+
+            {(campsDates || campsLocation || campsPrice) && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", marginTop: 22 }}>
+                {campsDates && (
+                  <span className="font-fredoka" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 14, padding: "10px 16px", fontSize: 15, fontWeight: 700, color: "#fff" }}>
+                    <span style={{ color: "#ffd27a", fontSize: 12, fontWeight: 800, letterSpacing: "0.06em" }}>TERMIN</span> {campsDates}
+                  </span>
+                )}
+                {campsLocation && (
+                  <span className="font-fredoka" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 14, padding: "10px 16px", fontSize: 15, fontWeight: 700, color: "#fff" }}>
+                    <span style={{ color: "#ffd27a", fontSize: 12, fontWeight: 800, letterSpacing: "0.06em" }}>MIEJSCE</span> {campsLocation}
+                  </span>
+                )}
+                {campsPrice && (
+                  <span className="font-fredoka" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,210,122,0.18)", border: "1px solid rgba(255,210,122,0.4)", borderRadius: 14, padding: "10px 16px", fontSize: 15, fontWeight: 700, color: "#ffd27a" }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.06em" }}>CENA</span> {campsPrice}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {campsPosterUrl && (
+              <div style={{ marginTop: 28 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={campsPosterUrl} alt="Plakat kolonii" onClick={() => setLightbox({ items: [{ url: campsPosterUrl, label: campsTitle }], index: 0 })} style={{ maxWidth: "100%", width: "min(520px,100%)", borderRadius: 18, border: "4px solid rgba(255,255,255,0.85)", boxShadow: "0 18px 40px rgba(0,0,0,0.32)", cursor: "pointer", display: "block", margin: "0 auto" }} />
+              </div>
+            )}
             {campsOfferPdfUrl && (
               <a href={campsOfferPdfUrl} target="_blank" rel="noreferrer" className="font-fredoka" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 22, fontWeight: 700, fontSize: 15, color: "#0f5b8f", background: "#ffd27a", borderRadius: 999, padding: "13px 28px", textDecoration: "none", boxShadow: "0 10px 24px rgba(0,0,0,0.28)" }}>
 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flex: "none" }}><path d="M12 3v12M7 11l5 5 5-5M5 21h14" /></svg> Pobierz ofertę obozów (PDF)
