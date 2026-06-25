@@ -337,7 +337,7 @@ export default function Home() {
       : rotateWindow(campPhotoItems, campsOffset, 4)
     : flagship;
 
-  // Automatyczna rotacja galerii zajęć (co ~5s, gdy jest więcej niż 6 zdjęć).
+  // Automatyczna rotacja galerii zajęć (co ~9s, powolne przenikanie, gdy >6 zdjęć).
   const galleryCount = galleryItems.length;
   useEffect(() => {
     if (showAllGallery || lightbox || galleryCount <= 6) return;
@@ -346,12 +346,12 @@ export default function Home() {
       setTimeout(() => {
         setGalleryOffset((o) => (o + 6) % galleryCount);
         setGalleryFade(false);
-      }, 450);
-    }, 5000);
+      }, 1000);
+    }, 9000);
     return () => clearInterval(id);
   }, [showAllGallery, lightbox, galleryCount]);
 
-  // Automatyczna rotacja zdjęć obozów (co ~5,5s, gdy jest więcej niż 4 zdjęcia).
+  // Automatyczna rotacja zdjęć obozów (co ~9,8s, powolne przenikanie, gdy >4 zdjęcia).
   const campsCount = campPhotoItems.length;
   useEffect(() => {
     if (showAllCamps || lightbox || campsCount <= 4) return;
@@ -360,8 +360,8 @@ export default function Home() {
       setTimeout(() => {
         setCampsOffset((o) => (o + 4) % campsCount);
         setCampsFade(false);
-      }, 450);
-    }, 5500);
+      }, 1000);
+    }, 9800);
     return () => clearInterval(id);
   }, [showAllCamps, lightbox, campsCount]);
 
@@ -729,7 +729,7 @@ export default function Home() {
             </button>
           )}
         </div>
-        <div className="as-reveal as-gallery-grid" style={{ display: "grid", gap: 16, transition: "opacity .45s ease", opacity: galleryFade ? 0 : 1 }}>
+        <div className="as-reveal as-gallery-grid" style={{ display: "grid", gap: 16, transition: "opacity 1s ease", opacity: galleryFade ? 0 : 1 }}>
           {visibleGallery.map((item, i) => (
             <button key={i} onClick={() => setLightbox({ items: galleryItems, index: showAllGallery ? i : (galleryOffset + i) % galleryItems.length })} className="as-gallery-item" style={{ border: "none", padding: 0, cursor: "pointer", borderRadius: 20, overflow: "hidden", aspectRatio: "4/3", position: "relative", boxShadow: "0 8px 20px rgba(15,91,143,0.08)" }}>
               {item.url ? (
@@ -804,7 +804,7 @@ export default function Home() {
                 </button>
               )}
             </div>
-            <div className="as-camp-grid" style={{ display: "grid", gap: 14, transition: "opacity .45s ease", opacity: campsFade ? 0 : 1 }}>
+            <div className="as-camp-grid" style={{ display: "grid", gap: 14, transition: "opacity 1s ease", opacity: campsFade ? 0 : 1 }}>
               {campVisible.map((item, i) => (
                 <button key={i} onClick={() => { if (item.url) setLightbox({ items: campPhotoItems, index: showAllCamps ? i : (campsOffset + i) % campPhotoItems.length }); }} className={item.url ? "as-gallery-item" : undefined} style={{ border: "none", padding: 0, cursor: item.url ? "pointer" : "default", borderRadius: 20, overflow: "hidden", aspectRatio: "4/3", position: "relative", boxShadow: "0 10px 24px rgba(0,0,0,0.25)" }}>
                   {item.url ? (
