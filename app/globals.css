@@ -142,6 +142,9 @@ img { max-width: 100%; }
 /* ===== Menu kontaktu (kopiuj / napisz / zadzwoń) ===== */
 .as-contact-opt:hover { background: #f1f7fb; }
 
+/* ===== Płynne przenikanie zdjęć (rotacja galerii/obozów) ===== */
+@keyframes as-crossfade { from { opacity: 0; } to { opacity: 1; } }
+
 /* ===== Hero: układ slogan / bańka / reszta ===== */
 .as-hero-grid {
   grid-template-columns: 1.08fr 0.92fr;

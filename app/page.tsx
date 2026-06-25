@@ -105,9 +105,7 @@ export default function Home() {
   const [showAllCamps, setShowAllCamps] = useState(false);
   // Automatyczna rotacja zdjęć na głównej (galeria + obozy).
   const [galleryOffset, setGalleryOffset] = useState(0);
-  const [galleryFade, setGalleryFade] = useState(false);
   const [campsOffset, setCampsOffset] = useState(0);
-  const [campsFade, setCampsFade] = useState(false);
   const [fLevel, setFLevel] = useState<string>("");
   const [fCont, setFCont] = useState("nie");
   const [fName, setFName] = useState("");
@@ -342,11 +340,7 @@ export default function Home() {
   useEffect(() => {
     if (showAllGallery || lightbox || galleryCount <= 6) return;
     const id = setInterval(() => {
-      setGalleryFade(true);
-      setTimeout(() => {
-        setGalleryOffset((o) => (o + 6) % galleryCount);
-        setGalleryFade(false);
-      }, 1000);
+      setGalleryOffset((o) => (o + 6) % galleryCount);
     }, 9000);
     return () => clearInterval(id);
   }, [showAllGallery, lightbox, galleryCount]);
@@ -356,11 +350,7 @@ export default function Home() {
   useEffect(() => {
     if (showAllCamps || lightbox || campsCount <= 4) return;
     const id = setInterval(() => {
-      setCampsFade(true);
-      setTimeout(() => {
-        setCampsOffset((o) => (o + 4) % campsCount);
-        setCampsFade(false);
-      }, 1000);
+      setCampsOffset((o) => (o + 4) % campsCount);
     }, 9800);
     return () => clearInterval(id);
   }, [showAllCamps, lightbox, campsCount]);
@@ -729,12 +719,11 @@ export default function Home() {
             </button>
           )}
         </div>
-        <div className="as-reveal as-gallery-grid" style={{ display: "grid", gap: 16, transition: "opacity 1s ease", opacity: galleryFade ? 0 : 1 }}>
+        <div className="as-reveal as-gallery-grid" style={{ display: "grid", gap: 16 }}>
           {visibleGallery.map((item, i) => (
             <button key={i} onClick={() => setLightbox({ items: galleryItems, index: showAllGallery ? i : (galleryOffset + i) % galleryItems.length })} className="as-gallery-item" style={{ border: "none", padding: 0, cursor: "pointer", borderRadius: 20, overflow: "hidden", aspectRatio: "4/3", position: "relative", boxShadow: "0 8px 20px rgba(15,91,143,0.08)" }}>
               {item.url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.url} alt={item.label} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                <CrossfadeImage url={item.url} alt={item.label} />
               ) : (
                 <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(135deg,#d3e7f5,#d3e7f5 14px,#e8f4fb 14px,#e8f4fb 28px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <span style={{ fontFamily: "monospace", fontSize: 12, color: "#7fa3bd", letterSpacing: "0.06em" }}>{item.label}</span>
@@ -804,12 +793,11 @@ export default function Home() {
                 </button>
               )}
             </div>
-            <div className="as-camp-grid" style={{ display: "grid", gap: 14, transition: "opacity 1s ease", opacity: campsFade ? 0 : 1 }}>
+            <div className="as-camp-grid" style={{ display: "grid", gap: 14 }}>
               {campVisible.map((item, i) => (
                 <button key={i} onClick={() => { if (item.url) setLightbox({ items: campPhotoItems, index: showAllCamps ? i : (campsOffset + i) % campPhotoItems.length }); }} className={item.url ? "as-gallery-item" : undefined} style={{ border: "none", padding: 0, cursor: item.url ? "pointer" : "default", borderRadius: 20, overflow: "hidden", aspectRatio: "4/3", position: "relative", boxShadow: "0 10px 24px rgba(0,0,0,0.25)" }}>
                   {item.url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.url} alt={item.label} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                    <CrossfadeImage url={item.url} alt={item.label} />
                   ) : (
                     <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(135deg,#1a6ca3,#1a6ca3 14px,#175f8f 14px,#175f8f 28px)", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid rgba(255,255,255,0.25)" }}>
                       <span style={{ fontFamily: "monospace", fontSize: 12, color: "rgba(255,255,255,0.7)" }}>{item.label}</span>
@@ -1081,6 +1069,35 @@ export default function Home() {
         </div>
       )}
     </div>
+  );
+}
+
+// Zdjęcie z płynnym przenikaniem: gdy url się zmienia, nowe pojawia się NA starym
+// (cross-fade), bez pustego „mrugnięcia". Wypełnia rodzica (position: relative).
+function CrossfadeImage({ url, alt }: { url: string | null; alt: string }) {
+  const [shown, setShown] = useState<string | null>(url);
+  const [incoming, setIncoming] = useState<string | null>(null);
+  useEffect(() => {
+    if (url === shown) return;
+    setIncoming(url);
+    const t = setTimeout(() => {
+      setShown(url);
+      setIncoming(null);
+    }, 1150);
+    return () => clearTimeout(t);
+  }, [url, shown]);
+  const base: React.CSSProperties = { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" };
+  return (
+    <>
+      {shown && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={shown} alt={alt} style={base} />
+      )}
+      {incoming && incoming !== shown && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={incoming} src={incoming} alt={alt} style={{ ...base, animation: "as-crossfade 1.1s ease forwards" }} />
+      )}
+    </>
   );
 }
 
