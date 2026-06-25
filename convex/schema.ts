@@ -122,6 +122,7 @@ export default defineSchema({
     storageId: v.id("_storage"),
     caption: v.optional(v.string()),
     category: v.union(v.literal("gallery"), v.literal("camps"), v.literal("about")),
+    kind: v.optional(v.union(v.literal("image"), v.literal("video"))), // domyślnie zdjęcie
     featured: v.boolean(), // pokazywane na stronie głównej
     order: v.number(),
   })

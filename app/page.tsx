@@ -99,7 +99,7 @@ function rotateWindow<T>(items: T[], offset: number, count: number): T[] {
 export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [poolFilter, setPoolFilter] = useState<string>("all");
-  const [lightbox, setLightbox] = useState<{ items: { url: string | null; label: string }[]; index: number } | null>(null);
+  const [lightbox, setLightbox] = useState<{ items: { url: string | null; label: string; kind?: "image" | "video" }[]; index: number } | null>(null);
   const [openReg, setOpenReg] = useState(0);
   const [showAllGallery, setShowAllGallery] = useState(false);
   const [showAllCamps, setShowAllCamps] = useState(false);
@@ -314,20 +314,20 @@ export default function Home() {
       : [];
 
   // Zdjęcia galerii zajęć (fallback: placeholdery z etykietami).
-  const galleryItems: { url: string | null; label: string }[] =
+  const galleryItems: { url: string | null; label: string; kind: "image" | "video" }[] =
     galleryImages && galleryImages.length
-      ? galleryImages.map((g) => ({ url: g.url, label: g.caption || "" }))
-      : GALLERY.map((label) => ({ url: null, label }));
+      ? galleryImages.map((g) => ({ url: g.url, label: g.caption || "", kind: g.kind }))
+      : GALLERY.map((label) => ({ url: null, label, kind: "image" as const }));
   const visibleGallery = showAllGallery ? galleryItems : rotateWindow(galleryItems, galleryOffset, 6);
 
   // Zdjęcia z obozów (osobna sekcja).
-  const campPhotoItems: { url: string | null; label: string }[] =
+  const campPhotoItems: { url: string | null; label: string; kind: "image" | "video" }[] =
     campImages && campImages.length
-      ? campImages.map((g) => ({ url: g.url, label: g.caption || "" }))
+      ? campImages.map((g) => ({ url: g.url, label: g.caption || "", kind: g.kind }))
       : [];
   // Dwa zdjęcia flagowe obozów (uzupełnione placeholderami, jeśli brak).
-  const flagship: { url: string | null; label: string }[] = [...campPhotoItems.slice(0, 4)];
-  while (flagship.length < 4) flagship.push({ url: null, label: `ZDJĘCIE ${flagship.length + 1}` });
+  const flagship: { url: string | null; label: string; kind: "image" | "video" }[] = [...campPhotoItems.slice(0, 4)];
+  while (flagship.length < 4) flagship.push({ url: null, label: `ZDJĘCIE ${flagship.length + 1}`, kind: "image" });
   // Kafelki obozów: gdy są zdjęcia — 4 podglądowe lub wszystkie (po rozwinięciu); gdy brak — placeholdery.
   const campVisible = campPhotoItems.length
     ? showAllCamps
@@ -723,11 +723,18 @@ export default function Home() {
           {visibleGallery.map((item, i) => (
             <button key={i} onClick={() => setLightbox({ items: galleryItems, index: showAllGallery ? i : (galleryOffset + i) % galleryItems.length })} className="as-gallery-item" style={{ border: "none", padding: 0, cursor: "pointer", borderRadius: 20, overflow: "hidden", aspectRatio: "4/3", position: "relative", boxShadow: "0 8px 20px rgba(15,91,143,0.08)" }}>
               {item.url ? (
-                <CrossfadeImage url={item.url} alt={item.label} />
+                item.kind === "video" ? (
+                  <video src={item.url} muted loop autoPlay playsInline preload="metadata" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <CrossfadeImage url={item.url} alt={item.label} />
+                )
               ) : (
                 <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(135deg,#d3e7f5,#d3e7f5 14px,#e8f4fb 14px,#e8f4fb 28px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <span style={{ fontFamily: "monospace", fontSize: 12, color: "#7fa3bd", letterSpacing: "0.06em" }}>{item.label}</span>
                 </div>
+              )}
+              {item.url && item.kind === "video" && (
+                <span style={{ position: "absolute", left: 10, bottom: 10, width: 30, height: 30, borderRadius: "50%", background: "rgba(15,91,143,0.85)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, paddingLeft: 2 }}>▶</span>
               )}
               <span style={{ position: "absolute", right: 10, bottom: 10, width: 32, height: 32, borderRadius: "50%", background: "rgba(15,91,143,0.85)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⤢</span>
             </button>
@@ -797,11 +804,18 @@ export default function Home() {
               {campVisible.map((item, i) => (
                 <button key={i} onClick={() => { if (item.url) setLightbox({ items: campPhotoItems, index: showAllCamps ? i : (campsOffset + i) % campPhotoItems.length }); }} className={item.url ? "as-gallery-item" : undefined} style={{ border: "none", padding: 0, cursor: item.url ? "pointer" : "default", borderRadius: 20, overflow: "hidden", aspectRatio: "4/3", position: "relative", boxShadow: "0 10px 24px rgba(0,0,0,0.25)" }}>
                   {item.url ? (
-                    <CrossfadeImage url={item.url} alt={item.label} />
+                    item.kind === "video" ? (
+                      <video src={item.url} muted loop autoPlay playsInline preload="metadata" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <CrossfadeImage url={item.url} alt={item.label} />
+                    )
                   ) : (
                     <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(135deg,#1a6ca3,#1a6ca3 14px,#175f8f 14px,#175f8f 28px)", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid rgba(255,255,255,0.25)" }}>
                       <span style={{ fontFamily: "monospace", fontSize: 12, color: "rgba(255,255,255,0.7)" }}>{item.label}</span>
                     </div>
+                  )}
+                  {item.url && item.kind === "video" && (
+                    <span style={{ position: "absolute", left: 12, bottom: 12, width: 30, height: 30, borderRadius: "50%", background: "rgba(15,91,143,0.9)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, paddingLeft: 2 }}>▶</span>
                   )}
                   {item.url && item.label && (
                     <span className="font-fredoka" style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "26px 14px 12px", textAlign: "left", fontWeight: 700, fontSize: 14, color: "#fff", background: "linear-gradient(transparent, rgba(8,40,64,0.82))", textShadow: "0 1px 4px rgba(0,0,0,0.4)" }}>{item.label}</span>
@@ -1055,8 +1069,12 @@ export default function Home() {
           <button onClick={(e) => { e.stopPropagation(); setLightbox({ items: lightbox.items, index: (lightbox.index + 1) % lightbox.items.length }); }} style={{ position: "absolute", right: 24, top: "50%", transform: "translateY(-50%)", width: 52, height: 52, borderRadius: "50%", border: "none", background: "rgba(255,255,255,0.16)", color: "#fff", fontSize: 24, cursor: "pointer" }}>›</button>
           <div onClick={(e) => e.stopPropagation()} style={{ width: "min(900px,92vw)", maxHeight: "85vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14 }}>
             {lightbox.items[lightbox.index].url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={lightbox.items[lightbox.index].url!} alt={lightbox.items[lightbox.index].label} style={{ maxWidth: "100%", maxHeight: "80vh", borderRadius: 18, boxShadow: "0 30px 70px rgba(0,0,0,0.5)", objectFit: "contain" }} />
+              lightbox.items[lightbox.index].kind === "video" ? (
+                <video key={lightbox.items[lightbox.index].url} src={lightbox.items[lightbox.index].url!} controls autoPlay playsInline style={{ maxWidth: "100%", maxHeight: "80vh", borderRadius: 18, boxShadow: "0 30px 70px rgba(0,0,0,0.5)", background: "#000" }} />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={lightbox.items[lightbox.index].url!} alt={lightbox.items[lightbox.index].label} style={{ maxWidth: "100%", maxHeight: "80vh", borderRadius: 18, boxShadow: "0 30px 70px rgba(0,0,0,0.5)", objectFit: "contain" }} />
+              )
             ) : (
               <div style={{ width: "min(820px,90vw)", aspectRatio: "4/3", borderRadius: 24, boxShadow: "0 30px 70px rgba(0,0,0,0.5)", background: "repeating-linear-gradient(135deg,#d3e7f5,#d3e7f5 22px,#e8f4fb 22px,#e8f4fb 44px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <span style={{ fontFamily: "monospace", fontSize: 16, color: "#5a8bab", letterSpacing: "0.08em" }}>{lightbox.items[lightbox.index].label}</span>

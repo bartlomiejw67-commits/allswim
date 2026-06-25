@@ -11,6 +11,7 @@ async function withUrl(ctx: QueryCtx, img: Doc<"images">) {
     _id: img._id,
     caption: img.caption,
     category: img.category,
+    kind: img.kind ?? "image",
     featured: img.featured,
     order: img.order,
     url: await ctx.storage.getUrl(img.storageId),
@@ -55,6 +56,7 @@ export const add = mutation({
   args: {
     storageId: v.id("_storage"),
     category,
+    kind: v.optional(v.union(v.literal("image"), v.literal("video"))),
     caption: v.optional(v.string()),
     featured: v.optional(v.boolean()),
   },
@@ -71,6 +73,7 @@ export const add = mutation({
     return await ctx.db.insert("images", {
       storageId: args.storageId,
       category: args.category,
+      kind: args.kind ?? "image",
       caption: args.caption,
       featured: args.featured ?? false,
       order,
