@@ -3,30 +3,65 @@ import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  // TODO: ustawić właściwą domenę po wdrożeniu na Vercel (dla poprawnych linków OG).
   metadataBase: new URL("https://allswim.pl"),
-  title: "ALL SWIM – nauka pływania dla dzieci",
+  title: "Nauka pływania dla dzieci w Tczewie – ALL SWIM",
   description:
-    "ALL SWIM – szkółka pływacka prowadzona przez Olę. Cierpliwa, bezpieczna nauka pływania dla dzieci. Małe grupy, dwa baseny w Tczewie.",
+    "ALL SWIM – szkółka pływacka w Tczewie. Nauka pływania dla dzieci: małe grupy, cierpliwe i bezpieczne podejście, doświadczona instruktorka. Zapisz dziecko na zajęcia.",
+  keywords: [
+    "nauka pływania Tczew",
+    "nauka pływania dla dzieci Tczew",
+    "szkółka pływacka Tczew",
+    "lekcje pływania Tczew",
+    "pływanie dzieci Tczew",
+    "instruktor pływania Tczew",
+    "ALL SWIM",
+  ],
+  applicationName: "ALL SWIM",
+  authors: [{ name: "ALL SWIM" }],
+  alternates: { canonical: "/" },
   icons: { icon: "/logo.png", apple: "/logo.png" },
-  // PRZED STARTEM: strona ukryta przed wyszukiwarkami. Usuń przy publikacji.
-  robots: { index: false, follow: false },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
   openGraph: {
-    title: "ALL SWIM – nauka pływania dla dzieci",
+    title: "Nauka pływania dla dzieci w Tczewie – ALL SWIM",
     description:
-      "Cierpliwa, bezpieczna nauka pływania dla dzieci. Małe grupy, dwa baseny w Tczewie.",
+      "Szkółka pływacka ALL SWIM w Tczewie. Cierpliwa, bezpieczna nauka pływania dla dzieci w małych grupach.",
     url: "/",
     siteName: "ALL SWIM",
-    images: [{ url: "/logo.png", width: 512, height: 512, alt: "ALL SWIM" }],
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "ALL SWIM – nauka pływania Tczew" }],
     locale: "pl_PL",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "ALL SWIM – nauka pływania dla dzieci",
-    description: "Nauka pływania dla dzieci · Tczew",
+    title: "Nauka pływania dla dzieci w Tczewie – ALL SWIM",
+    description: "Szkółka pływacka ALL SWIM · nauka pływania dla dzieci · Tczew",
     images: ["/logo.png"],
   },
+};
+
+// Dane strukturalne (dla Google) — lokalna działalność w Tczewie.
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SportsActivityLocation",
+  name: "ALL SWIM",
+  description: "Szkółka pływacka – nauka pływania dla dzieci w Tczewie.",
+  url: "https://allswim.pl",
+  logo: "https://allswim.pl/logo.png",
+  image: "https://allswim.pl/logo.png",
+  telephone: "+48 601 180 250",
+  email: "allswimkontakt@gmail.com",
+  areaServed: { "@type": "City", name: "Tczew" },
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Tczew",
+    addressRegion: "pomorskie",
+    addressCountry: "PL",
+  },
+  sport: "Swimming",
 };
 
 export default function RootLayout({
@@ -45,6 +80,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>
     </html>
