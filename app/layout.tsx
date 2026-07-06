@@ -19,6 +19,7 @@ export const metadata: Metadata = {
   applicationName: "ALL SWIM",
   authors: [{ name: "ALL SWIM" }],
   alternates: { canonical: "/" },
+  verification: { google: "OGX5O-9ibB6yvinwp_r9JutWAOI8iN5PsgZoVizB350" },
   icons: { icon: "/logo.png", apple: "/logo.png" },
   robots: {
     index: true,
