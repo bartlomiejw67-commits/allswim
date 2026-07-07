@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { A, card, input, label, btnPrimary, btnSecondary, btnDanger } from "@/components/admin/ui";
+import { compressImage } from "@/components/imageCompress";
 
 type Form = {
   recruitmentOpen: boolean;
@@ -170,8 +171,9 @@ export default function AdminSettings() {
     if (!file) return;
     setPosterUploading(true);
     try {
+      const blob = await compressImage(file, 1400, 0.85);
       const url = await generateUploadUrl();
-      const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
+      const res = await fetch(url, { method: "POST", headers: { "Content-Type": blob.type || file.type }, body: blob });
       const json = (await res.json()) as { storageId: string };
       await setCampsPoster({ storageId: json.storageId as Id<"_storage"> });
     } catch (e) {
@@ -189,8 +191,9 @@ export default function AdminSettings() {
     setAboutUploading(true);
     try {
       for (const file of Array.from(files).slice(0, free)) {
+        const blob = await compressImage(file);
         const url = await generateUploadUrl();
-        const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": blob.type || file.type }, body: blob });
         const json = (await res.json()) as { storageId: string };
         await addImage({ storageId: json.storageId as Id<"_storage">, category: "about" });
       }

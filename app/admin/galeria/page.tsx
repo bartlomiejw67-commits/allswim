@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { A, card, input, label, btnPrimary, btnDanger, btnSecondary, btnGhost } from "@/components/admin/ui";
+import { compressImage } from "@/components/imageCompress";
 
 type Cat = "gallery" | "camps" | "about";
 
@@ -24,8 +25,9 @@ export default function Page() {
     try {
       for (const file of Array.from(files)) {
         if (file.type.startsWith("video")) continue; // filmy nie są wspierane (obciążają transfer)
+        const blob = await compressImage(file);
         const url = await generateUploadUrl();
-        const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": blob.type || file.type }, body: blob });
         const json = (await res.json()) as { storageId: string };
         await add({ storageId: json.storageId as Id<"_storage">, category: cat, kind: "image", featured: cat === "gallery" });
       }

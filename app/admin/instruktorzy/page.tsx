@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { A, card, input, label, btnPrimary, btnDanger, btnSecondary } from "@/components/admin/ui";
+import { compressImage } from "@/components/imageCompress";
 
 type Instructor = {
   _id: string;
@@ -72,8 +73,9 @@ function InstructorCard({ it }: { it: Instructor }) {
     try {
       const free = 3 - it.photoUrls.length;
       for (const file of Array.from(files).slice(0, Math.max(0, free))) {
+        const blob = await compressImage(file);
         const url = await generateUploadUrl();
-        const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": blob.type || file.type }, body: blob });
         const json = (await res.json()) as { storageId: string };
         await addPhoto({ id: it._id as Id<"instructors">, storageId: json.storageId as Id<"_storage"> });
       }
