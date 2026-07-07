@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireAdmin } from "./lib";
 import { Doc } from "./_generated/dataModel";
@@ -103,5 +103,27 @@ export const remove = mutation({
       await ctx.storage.delete(img.storageId);
       await ctx.db.delete("images", id);
     }
+  },
+});
+
+// Jednorazowe czyszczenie: usuwa wszystkie wpisy filmów (kind="video") wraz z plikami.
+// Uruchamiane z CLI: `npx convex run images:purgeVideos`.
+export const purgeVideos = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const all = await ctx.db.query("images").take(5000);
+    let deleted = 0;
+    for (const img of all) {
+      if (img.kind === "video") {
+        try {
+          await ctx.storage.delete(img.storageId);
+        } catch {
+          /* plik już usunięty w dashboardzie — pomijamy */
+        }
+        await ctx.db.delete("images", img._id);
+        deleted++;
+      }
+    }
+    return deleted;
   },
 });

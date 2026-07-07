@@ -23,11 +23,11 @@ export default function Page() {
     setUploading(true);
     try {
       for (const file of Array.from(files)) {
+        if (file.type.startsWith("video")) continue; // filmy nie są wspierane (obciążają transfer)
         const url = await generateUploadUrl();
         const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
         const json = (await res.json()) as { storageId: string };
-        const kind = file.type.startsWith("video") ? "video" : "image";
-        await add({ storageId: json.storageId as Id<"_storage">, category: cat, kind, featured: cat === "gallery" });
+        await add({ storageId: json.storageId as Id<"_storage">, category: cat, kind: "image", featured: cat === "gallery" });
       }
     } catch (e) {
       alert((e as { data?: string; message?: string }).data ?? "Nie udało się wgrać zdjęcia.");
@@ -40,7 +40,7 @@ export default function Page() {
   return (
     <div>
       <h1 className="font-fredoka" style={{ fontSize: 28, color: A.navy, margin: "0 0 4px" }}>Galeria</h1>
-      <p style={{ color: A.grey, fontSize: 14, margin: "0 0 20px" }}>Wgrywaj <strong>zdjęcia i filmy</strong> do galerii lub do sekcji obozów. „Na głównej” oznacza wyświetlanie wśród pierwszych zdjęć.</p>
+      <p style={{ color: A.grey, fontSize: 14, margin: "0 0 20px" }}>Wgrywaj zdjęcia do galerii lub do sekcji obozów. „Na głównej” oznacza wyświetlanie wśród pierwszych zdjęć.</p>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
         <button onClick={() => setCat("gallery")} style={{ ...btnGhost, ...(cat === "gallery" ? { background: A.navy, color: "#fff" } : {}) }}>Galeria</button>
@@ -48,8 +48,8 @@ export default function Page() {
       </div>
 
       <div style={{ ...card, borderStyle: "dashed", borderColor: "#c3d4df", marginBottom: 20 }}>
-        <input ref={fileRef} type="file" accept="image/*,video/*" multiple onChange={(e) => onFiles(e.target.files)} style={{ display: "none" }} />
-        <button style={btnPrimary} disabled={uploading} onClick={() => fileRef.current?.click()}>{uploading ? "Wgrywanie…" : "+ Wgraj zdjęcia / filmy"}</button>
+        <input ref={fileRef} type="file" accept="image/*" multiple onChange={(e) => onFiles(e.target.files)} style={{ display: "none" }} />
+        <button style={btnPrimary} disabled={uploading} onClick={() => fileRef.current?.click()}>{uploading ? "Wgrywanie…" : "+ Wgraj zdjęcia"}</button>
       </div>
 
       {images === undefined && <p style={{ color: A.grey }}>Ładowanie…</p>}
