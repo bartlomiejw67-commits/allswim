@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { requireAdmin, scheduleSignature, groupPoolName } from "./lib";
@@ -63,6 +63,46 @@ async function computeChange(
 
   return { category, dirty, currentHash: sig.hash, times: sig.times };
 }
+
+// Jednorazowa wysyłka: do KAŻDEJ zaakceptowanej osoby z przydzieloną grupą wysyła
+// mail „przyjęcie na zajęcia" z grupą, basenem i godzinami — niezależnie od tego,
+// czy było już opublikowane. Uruchamiane z CLI: `npx convex run publish:resendAllAssigned`.
+// Opcjonalny dryRun: tylko liczy, nic nie wysyła.
+export const resendAllAssigned = internalMutation({
+  args: { dryRun: v.optional(v.boolean()) },
+  handler: async (ctx, { dryRun }) => {
+    const approved = await ctx.db
+      .query("enrollments")
+      .withIndex("by_status", (q) => q.eq("status", "approved"))
+      .take(1000);
+    let sent = 0;
+    let skippedNoGroup = 0;
+    const recipients: string[] = [];
+    for (const e of approved) {
+      if (!e.email || !e.assignedGroupId) {
+        skippedNoGroup++;
+        continue;
+      }
+      const group = await ctx.db.get("groups", e.assignedGroupId);
+      const poolName = await groupPoolName(ctx, e.assignedGroupId);
+      const sig = await scheduleSignature(ctx, e.assignedGroupId);
+      const times = formatTimes(sig.times);
+      if (!dryRun) {
+        // Rozkładamy wysyłkę w czasie (~1,6/s) — poniżej limitu Resend, bez odbić.
+        await ctx.scheduler.runAfter(sent * 600, internal.emails.sendParticipantAssigned, {
+          to: e.email,
+          childName: e.name,
+          groupName: group?.name ?? "",
+          poolName,
+          times,
+        });
+      }
+      sent++;
+      recipients.push(`${e.name} → ${group?.name ?? "?"} (${times || "brak godzin"})`);
+    }
+    return { sent, skippedNoGroup, dryRun: !!dryRun, recipients };
+  },
+});
 
 // Admin: podsumowanie niezapublikowanych zmian (do przycisku i popupu).
 export const pendingChanges = query({
