@@ -1,8 +1,26 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalQuery } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { internal } from "./_generated/api";
 import { requireAdmin, getCurrentUser } from "./lib";
+
+// TYMCZASOWE: diagnostyka — pełny wykaz zgłoszeń (do weryfikacji, czy coś zniknęło).
+export const debugRecent = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const all = await ctx.db.query("enrollments").order("desc").take(3000);
+    const byStatus: Record<string, number> = {};
+    for (const e of all) byStatus[e.status] = (byStatus[e.status] ?? 0) + 1;
+    const rows = all.map((e) => ({
+      name: e.name,
+      email: e.email,
+      phone: e.phone ?? "",
+      status: e.status,
+      whenMs: e._creationTime,
+    }));
+    return { total: all.length, byStatus, rows };
+  },
+});
 
 // Czy nabór jest aktualnie otwarty (publiczne — front pokazuje/ukrywa formularz).
 export const recruitmentStatus = query({

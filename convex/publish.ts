@@ -104,6 +104,32 @@ export const resendAllAssigned = internalMutation({
   },
 });
 
+// Jednorazowa wysyłka: mail „lista rezerwowa" do KAŻDEJ osoby ze statusem reserve.
+// Uruchamiane z CLI: `npx convex run publish:resendAllReserve`. dryRun = tylko liczy.
+export const resendAllReserve = internalMutation({
+  args: { dryRun: v.optional(v.boolean()) },
+  handler: async (ctx, { dryRun }) => {
+    const reserve = await ctx.db
+      .query("enrollments")
+      .withIndex("by_status", (q) => q.eq("status", "reserve"))
+      .take(1000);
+    let sent = 0;
+    const recipients: string[] = [];
+    for (const e of reserve) {
+      if (!e.email) continue;
+      if (!dryRun) {
+        await ctx.scheduler.runAfter(sent * 600, internal.emails.sendParticipantReserve, {
+          to: e.email,
+          childName: e.name,
+        });
+      }
+      sent++;
+      recipients.push(`${e.name} <${e.email}>`);
+    }
+    return { sent, dryRun: !!dryRun, recipients };
+  },
+});
+
 // Admin: podsumowanie niezapublikowanych zmian (do przycisku i popupu).
 export const pendingChanges = query({
   args: {},
