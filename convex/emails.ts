@@ -163,9 +163,10 @@ export const sendParticipantReserve = internalAction({
   args: { to: v.string(), childName: v.string() },
   handler: async (_ctx, args) => {
     const html = layout(
-      "Zgłoszenie na liście rezerwowej",
-      `<p style="margin:0;font-size:15px;line-height:1.6">Dziękujemy za zgłoszenie <strong>${args.childName}</strong>. W tej chwili wszystkie miejsca w grupach są zajęte, dlatego umieściliśmy zgłoszenie na <strong>liście rezerwowej</strong>.</p>
-       <p style="margin:12px 0 0;font-size:15px;line-height:1.6">Gdy tylko zwolni się miejsce, skontaktujemy się z propozycją grupy i terminu. Dziękujemy za cierpliwość! 🌊</p>${accountLink()}`,
+      "Jesteście na liście rezerwowej 🌊",
+      `<p style="margin:0;font-size:15px;line-height:1.6">Dziękujemy za zgłoszenie <strong>${args.childName}</strong>! 🌊</p>
+       <p style="margin:12px 0 0;font-size:15px;line-height:1.6">Na ten moment grupy są pełne, więc jesteście na naszej <strong>liście rezerwowej</strong>. Gdy zwolni się miejsce, odezwiemy się jako pierwsi z propozycją grupy i terminu.</p>
+       <p style="margin:12px 0 0;font-size:15px;line-height:1.6">Trzymamy dla Was miejsce w kolejce — do usłyszenia wkrótce!</p>${accountLink()}`,
     );
     await sendEmail({ to: args.to, subject: "Lista rezerwowa — ALL SWIM", html });
   },
