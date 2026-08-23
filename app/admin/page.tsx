@@ -6,12 +6,13 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { A, card, btnPrimary, btnDanger, btnGhost, input } from "@/components/admin/ui";
 
-type StatusFilter = "pending" | "approved" | "rejected" | "all";
+type StatusFilter = "pending" | "approved" | "rejected" | "reserve" | "all";
 
 const STATUS_LABEL: Record<string, { label: string; color: string; bg: string }> = {
   pending: { label: "Oczekuje", color: "#9a6a00", bg: "#fff3da" },
   approved: { label: "Zaakceptowane", color: "#1f8a5b", bg: "#e8f7ee" },
   rejected: { label: "Odrzucone", color: "#b4232a", bg: "#fdeaea" },
+  reserve: { label: "Lista rezerwowa", color: "#6b4bbd", bg: "#efeafc" },
 };
 
 export default function AdminEnrollments() {
@@ -21,6 +22,7 @@ export default function AdminEnrollments() {
   const decide = useMutation(api.enrollments.decide);
   const remove = useMutation(api.enrollments.remove);
   const unassign = useMutation(api.enrollments.unassign);
+  const reserveM = useMutation(api.enrollments.reserve);
 
   const [groupChoice, setGroupChoice] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -52,6 +54,17 @@ export default function AdminEnrollments() {
     }
   }
 
+  async function putReserve(id: string) {
+    setBusy(id);
+    try {
+      await reserveM({ id: id as Id<"enrollments"> });
+    } catch (e) {
+      alert((e as { data?: string }).data ?? "Nie udało się dodać do listy rezerwowej.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function undo(id: string) {
     if (!confirm("Cofnąć decyzję i przywrócić zgłoszenie do oczekujących? Przydział grupy zostanie zdjęty.")) return;
     setBusy(id);
@@ -77,6 +90,7 @@ export default function AdminEnrollments() {
   const tabs: { key: StatusFilter; label: string }[] = [
     { key: "pending", label: "Oczekujące" },
     { key: "approved", label: "Zaakceptowane" },
+    { key: "reserve", label: "Lista rezerwowa" },
     { key: "rejected", label: "Odrzucone" },
     { key: "all", label: "Wszystkie" },
   ];
@@ -84,7 +98,7 @@ export default function AdminEnrollments() {
   return (
     <div>
       <h1 className="font-fredoka" style={{ fontSize: 28, color: A.navy, margin: "0 0 4px" }}>Zgłoszenia naboru</h1>
-      <p style={{ color: A.grey, fontSize: 14, margin: "0 0 20px" }}>Osoby kontynuujące są wyżej na liście. Zaakceptuj i przydziel do grupy lub odrzuć. Pomyłka? Użyj <strong>„↩ Cofnij decyzję”</strong>, aby przywrócić zgłoszenie do oczekujących.</p>
+      <p style={{ color: A.grey, fontSize: 14, margin: "0 0 20px" }}>Osoby kontynuujące są wyżej na liście. Zaakceptuj i przydziel do grupy, odrzuć albo dodaj na <strong>Listę rezerwową</strong> (gdy brak miejsc). Gdy zwolni się miejsce, wejdź w zakładkę „Lista rezerwowa" i kliknij <strong>„Przydziel do grupy"</strong>. Maile do rodziców wychodzą dopiero po <strong>opublikowaniu zmian</strong>.</p>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
         {tabs.map((t) => (
@@ -128,7 +142,7 @@ export default function AdminEnrollments() {
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
-                  {e.status === "pending" && (
+                  {(e.status === "pending" || e.status === "reserve") && (
                     <>
                       <select value={groupChoice[e._id] ?? ""} onChange={(ev) => setGroupChoice((g) => ({ ...g, [e._id]: ev.target.value }))} style={{ ...input, width: 220 }}>
                         <option value="">— wybierz grupę —</option>
@@ -136,8 +150,11 @@ export default function AdminEnrollments() {
                           <option key={g._id} value={g._id}>{g.name}</option>
                         ))}
                       </select>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button disabled={busy === e._id} style={btnPrimary} onClick={() => approve(e._id)}>Zaakceptuj</button>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                        <button disabled={busy === e._id} style={btnPrimary} onClick={() => approve(e._id)}>{e.status === "reserve" ? "Przydziel do grupy" : "Zaakceptuj"}</button>
+                        {e.status === "pending" && (
+                          <button disabled={busy === e._id} style={{ ...btnGhost, borderColor: "#6b4bbd", color: "#6b4bbd" }} onClick={() => putReserve(e._id)}>Lista rezerwowa</button>
+                        )}
                         <button disabled={busy === e._id} style={btnGhost} onClick={() => reject(e._id)}>Odrzuć</button>
                       </div>
                     </>

@@ -16,12 +16,14 @@ export default function PublishBar() {
   const [busy, setBusy] = useState(false);
   const [notifyAssigned, setNotifyAssigned] = useState(true);
   const [notifyRejected, setNotifyRejected] = useState(true);
+  const [notifyReserve, setNotifyReserve] = useState(true);
   const [notifyScheduleChanged, setNotifyScheduleChanged] = useState(true);
   const [notifyRemoved, setNotifyRemoved] = useState(true);
 
   const dirty = pending?.dirtyCount ?? 0;
   const assigned = pending?.assigned ?? [];
   const rejected = pending?.rejected ?? [];
+  const reserved = pending?.reserved ?? [];
   const scheduleChanged = pending?.scheduleChanged ?? [];
   const removed = pending?.removed ?? [];
 
@@ -31,6 +33,7 @@ export default function PublishBar() {
       const res = await publish({
         notifyAssigned: !silent && notifyAssigned && assigned.length > 0,
         notifyRejected: !silent && notifyRejected && rejected.length > 0,
+        notifyReserve: !silent && notifyReserve && reserved.length > 0,
         notifyScheduleChanged: !silent && notifyScheduleChanged && scheduleChanged.length > 0,
         notifyRemoved: !silent && notifyRemoved && removed.length > 0,
       });
@@ -81,6 +84,13 @@ export default function PublishBar() {
                 onChange={setNotifyAssigned}
                 title="Nowe przydziały do grup"
                 items={assigned.map((a) => `${a.name} → ${a.groupName}${a.poolName ? ` · ${a.poolName}` : ""}`)}
+              />
+              <NotifyRow
+                checked={notifyReserve}
+                disabled={reserved.length === 0}
+                onChange={setNotifyReserve}
+                title="Lista rezerwowa"
+                items={reserved.map((r) => r.name)}
               />
               <NotifyRow
                 checked={notifyRejected}

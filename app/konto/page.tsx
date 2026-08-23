@@ -15,6 +15,7 @@ const STATUS: Record<string, { label: string; color: string; bg: string }> = {
   pending: { label: "Oczekuje na decyzję", color: "#9a6a00", bg: "#fff3da" },
   approved: { label: "Zaakceptowane", color: "#1f8a5b", bg: "#e8f7ee" },
   rejected: { label: "Odrzucone", color: "#b4232a", bg: "#fdeaea" },
+  reserve: { label: "Lista rezerwowa", color: "#6b4bbd", bg: "#efeafc" },
 };
 
 const card: React.CSSProperties = {

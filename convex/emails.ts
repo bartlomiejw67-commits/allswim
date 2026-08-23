@@ -158,6 +158,19 @@ export const sendParticipantRejected = internalAction({
   },
 });
 
+// Do uczestnika: umieszczenie na liście rezerwowej (po publikacji).
+export const sendParticipantReserve = internalAction({
+  args: { to: v.string(), childName: v.string() },
+  handler: async (_ctx, args) => {
+    const html = layout(
+      "Zgłoszenie na liście rezerwowej",
+      `<p style="margin:0;font-size:15px;line-height:1.6">Dziękujemy za zgłoszenie <strong>${args.childName}</strong>. W tej chwili wszystkie miejsca w grupach są zajęte, dlatego umieściliśmy zgłoszenie na <strong>liście rezerwowej</strong>.</p>
+       <p style="margin:12px 0 0;font-size:15px;line-height:1.6">Gdy tylko zwolni się miejsce, skontaktujemy się z propozycją grupy i terminu. Dziękujemy za cierpliwość! 🌊</p>${accountLink()}`,
+    );
+    await sendEmail({ to: args.to, subject: "Lista rezerwowa — ALL SWIM", html });
+  },
+});
+
 // Do uczestnika: zmiana grupy/godzin u już przydzielonego (po publikacji).
 export const sendParticipantScheduleChanged = internalAction({
   args: {

@@ -180,6 +180,7 @@ export const list = query({
         v.literal("pending"),
         v.literal("approved"),
         v.literal("rejected"),
+        v.literal("reserve"),
       ),
     ),
   },
@@ -279,6 +280,23 @@ export const decide = mutation({
       });
     }
 
+    return true;
+  },
+});
+
+// Admin: umieszczenie zgłoszenia na liście rezerwowej (brak miejsc).
+// NIE wysyła maila — grzecznościowe powiadomienie idzie przy publikacji zmian.
+export const reserve = mutation({
+  args: { id: v.id("enrollments"), decisionNote: v.optional(v.string()) },
+  handler: async (ctx, { id, decisionNote }) => {
+    await requireAdmin(ctx);
+    const e = await ctx.db.get("enrollments", id);
+    if (!e) throw new ConvexError("Nie znaleziono zgłoszenia.");
+    await ctx.db.patch("enrollments", id, {
+      status: "reserve",
+      assignedGroupId: undefined,
+      decisionNote,
+    });
     return true;
   },
 });

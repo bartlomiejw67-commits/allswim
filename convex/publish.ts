@@ -23,7 +23,7 @@ function formatTimes(
     .join(", ");
 }
 
-type Category = "accepted" | "assigned" | "rejected" | "scheduleChanged" | "removed" | null;
+type Category = "accepted" | "assigned" | "rejected" | "reserve" | "scheduleChanged" | "removed" | null;
 
 // Wylicza, co zmieniło się w zgłoszeniu względem ostatnio opublikowanego stanu.
 async function computeChange(
@@ -44,6 +44,8 @@ async function computeChange(
   let category: Category = null;
   if (e.status === "rejected" && pubStatus !== "rejected") {
     category = "rejected";
+  } else if (e.status === "reserve" && pubStatus !== "reserve") {
+    category = "reserve";
   } else if (e.status === "approved" && e.assignedGroupId) {
     const sameAssignment = pubStatus === "approved" && !groupChanged;
     const hasTimes = sig.hash !== "";
@@ -71,6 +73,7 @@ export const pendingChanges = query({
 
     const assigned: { name: string; groupName: string; poolName: string | null }[] = [];
     const rejected: { name: string }[] = [];
+    const reserved: { name: string }[] = [];
     const scheduleChanged: { name: string; groupName: string; poolName: string | null }[] = [];
     const removed: { name: string }[] = [];
     let dirtyCount = 0;
@@ -81,6 +84,8 @@ export const pendingChanges = query({
       if (!c.category) continue;
       if (c.category === "rejected") {
         rejected.push({ name: e.name });
+      } else if (c.category === "reserve") {
+        reserved.push({ name: e.name });
       } else if (c.category === "removed") {
         removed.push({ name: e.name });
       } else {
@@ -97,7 +102,7 @@ export const pendingChanges = query({
       }
     }
 
-    return { dirtyCount, assigned, rejected, scheduleChanged, removed };
+    return { dirtyCount, assigned, rejected, reserved, scheduleChanged, removed };
   },
 });
 
@@ -107,12 +112,13 @@ export const publish = mutation({
   args: {
     notifyAssigned: v.boolean(),
     notifyRejected: v.boolean(),
+    notifyReserve: v.boolean(),
     notifyScheduleChanged: v.boolean(),
     notifyRemoved: v.boolean(),
   },
   handler: async (
     ctx,
-    { notifyAssigned, notifyRejected, notifyScheduleChanged, notifyRemoved },
+    { notifyAssigned, notifyRejected, notifyReserve, notifyScheduleChanged, notifyRemoved },
   ) => {
     await requireAdmin(ctx);
     const all = await ctx.db.query("enrollments").take(2000);
@@ -153,6 +159,12 @@ export const publish = mutation({
             to: e.email,
             childName: e.name,
             note: e.decisionNote ?? null,
+          });
+          mailsQueued++;
+        } else if (c.category === "reserve" && notifyReserve) {
+          await ctx.scheduler.runAfter(0, internal.emails.sendParticipantReserve, {
+            to: e.email,
+            childName: e.name,
           });
           mailsQueued++;
         } else if (c.category === "scheduleChanged" && notifyScheduleChanged) {
