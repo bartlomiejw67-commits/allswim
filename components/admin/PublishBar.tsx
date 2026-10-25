@@ -39,7 +39,7 @@ export default function PublishBar() {
         notifyRemoved: !silent && notifyRemoved && removed.length > 0,
       });
       setOpen(false);
-      alert(`Opublikowano. Zaktualizowano: ${res.publishedCount}, wysłano powiadomień: ${res.mailsQueued}.`);
+      alert(`Opublikowano. Zaktualizowano: ${res.publishedCount}. Maile w kolejce: ${res.mailsQueued} — wysyłają się w tle (ok. 1 na sekundę). Status każdego maila: zakładka „Wiadomości e-mail”.`);
     } catch (e) {
       alert((e as { data?: string }).data ?? "Nie udało się opublikować.");
     } finally {

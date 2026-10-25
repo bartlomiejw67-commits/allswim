@@ -28,6 +28,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const me = useQuery(api.users.me);
   const isAdmin = me?.role === "admin";
   const pendingCount = useQuery(api.enrollments.pendingCount, isAdmin ? {} : "skip");
+  const failedMails = useQuery(api.outbox.failedCount, isAdmin ? {} : "skip");
   const claimAdmin = useMutation(api.users.claimAdmin);
   const { signOut } = useAuthActions();
   const router = useRouter();
@@ -106,12 +107,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 {ADMIN_NAV.filter((n) => n.group === g).map((n) => {
                   const active = pathname === n.href;
-                  const badge = n.href === "/admin" && pendingCount ? pendingCount : 0;
+                  const isMail = n.href === "/admin/maile";
+                  const badge = n.href === "/admin" && pendingCount ? pendingCount : isMail && failedMails ? failedMails : 0;
                   return (
                     <Link key={n.href} href={n.href} className="adm-link" data-active={active} aria-current={active ? "page" : undefined}>
                       <Icon name={n.icon} size={19} />
                       <span>{n.label}</span>
-                      {badge > 0 && <span className="adm-badge" title="Oczekujące zgłoszenia">{badge}</span>}
+                      {badge > 0 && <span className="adm-badge" style={isMail ? { background: "#d14343" } : undefined} title={isMail ? "Nieudane maile" : "Oczekujące zgłoszenia"}>{badge}</span>}
                     </Link>
                   );
                 })}

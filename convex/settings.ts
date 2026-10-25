@@ -1,7 +1,8 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { internal } from "./_generated/api";
 import { requireAdmin } from "./lib";
+import { enqueueEmail, STAGGER_MS } from "./outbox";
+import { tpl } from "./emails";
 
 // Publiczny odczyt ustawień strony (zwraca null, jeśli jeszcze nie ustawione).
 export const get = query({
@@ -212,9 +213,11 @@ export const update = mutation({
     // Nabór właśnie się otworzył (false → true) → powiadom osoby z listy oczekujących.
     if (!wasOpen && willOpen) {
       const waiting = (await ctx.db.query("waitlist").take(500)).filter((w) => !w.notified);
+      let i = 0;
       for (const w of waiting) {
-        await ctx.scheduler.runAfter(0, internal.emails.sendWaitlistOpened, { to: w.email });
+        await enqueueEmail(ctx, { to: w.email, kind: "waitlistOpened", content: tpl.waitlistOpened(), delayMs: i * STAGGER_MS });
         await ctx.db.patch("waitlist", w._id, { notified: true });
+        i++;
       }
     }
 

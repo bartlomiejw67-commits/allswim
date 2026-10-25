@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { A, card, btnPrimary, btnSecondary, btnDanger, btnGhost, input, pageTitle, pageDesc } from "@/components/admin/ui";
+import { A, card, btnPrimary, btnSecondary, btnDanger, btnGhost, input, pageTitle, pageDesc, MAIL_KIND, MAIL_STATUS } from "@/components/admin/ui";
 import { Icon } from "@/components/Icons";
 
 type StatusFilter = "pending" | "approved" | "rejected" | "reserve" | "all";
@@ -155,6 +155,15 @@ export default function AdminEnrollments() {
                   {e.childAge && <span style={chip}><Icon name="cake" size={15} color={A.navy} /> Wiek: {e.childAge}</span>}
                   {e.levelLabel && <span style={chip}><Icon name="layers" size={15} color={A.navy} /> {e.levelLabel}</span>}
                   {e.assignedGroupName && <span style={{ ...chip, background: "#e9f6ef", borderColor: "#cfe9d9", color: "#1f6b47" }}><Icon name="users" size={15} /> {e.assignedGroupName}</span>}
+                  {e.lastMail && (() => {
+                    const ms = MAIL_STATUS[e.lastMail.status];
+                    return (
+                      <span title={e.lastMail.error ?? undefined} style={{ ...chip, background: ms.bg, borderColor: "transparent", color: ms.color }}>
+                        <Icon name={e.lastMail.status === "failed" ? "alert" : "mail"} size={15} />
+                        {MAIL_KIND[e.lastMail.kind] ?? e.lastMail.kind}: {ms.label.toLowerCase()} · {new Date(e.lastMail.at).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit" })}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 {e.note && (

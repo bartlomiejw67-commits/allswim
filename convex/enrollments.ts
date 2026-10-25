@@ -1,8 +1,9 @@
 import { query, mutation, internalQuery } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { internal } from "./_generated/api";
 import { requireAdmin, getCurrentUser } from "./lib";
+import { enqueueEmail, STAGGER_MS } from "./outbox";
+import { tpl } from "./emails";
 
 // TYMCZASOWE: diagnostyka — pełny wykaz zgłoszeń (do weryfikacji, czy coś zniknęło).
 export const debugRecent = internalQuery({
@@ -103,22 +104,25 @@ export const submit = mutation({
       status: "pending",
     });
 
-    // Powiadomienie administratora o nowym zgłoszeniu (poza transakcją).
+    // Maile idą przez skrzynkę nadawczą (zapis + ponawianie). Rozsunięte w czasie, żeby nie trafić w limit Resend.
     const adminEmail = settings?.contactEmail;
     if (adminEmail) {
-      await ctx.scheduler.runAfter(0, internal.emails.sendAdminNewEnrollment, {
+      await enqueueEmail(ctx, {
         to: adminEmail,
+        kind: "adminNew",
+        enrollmentId: id,
         childName: name,
-        levelLabel: levelLabel ?? null,
-        parentEmail: email,
-        parentPhone: args.phone ?? null,
-        isContinuing: args.isContinuing,
+        content: tpl.adminNewEnrollment({ childName: name, levelLabel: levelLabel ?? null, parentEmail: email, parentPhone: args.phone ?? null, isContinuing: args.isContinuing }),
       });
     }
-    // Potwierdzenie otrzymania zgłoszenia dla rodzica (szkielet pod Resend).
-    await ctx.scheduler.runAfter(0, internal.emails.sendParticipantReceived, {
+    // Potwierdzenie otrzymania zgłoszenia dla rodzica.
+    await enqueueEmail(ctx, {
       to: email,
+      kind: "received",
+      enrollmentId: id,
       childName: name,
+      content: tpl.participantReceived({ childName: name }),
+      delayMs: STAGGER_MS,
     });
 
     return id;
@@ -215,10 +219,20 @@ export const list = query({
         const isPublished =
           (e.publishedStatus ?? "pending") === e.status &&
           (e.publishedGroupId ?? null) === (e.assignedGroupId ?? null);
+        // Ostatni mail do rodziny (pomijamy powiadomienia dla admina) — widać, czy doszedł.
+        const mails = await ctx.db
+          .query("emailOutbox")
+          .withIndex("by_enrollment", (q) => q.eq("enrollmentId", e._id))
+          .order("desc")
+          .take(6);
+        const last = mails.find((m) => m.kind !== "adminNew");
         return {
           ...e,
           assignedGroupName: group?.name ?? null,
           isPublished,
+          lastMail: last
+            ? { kind: last.kind, status: last.status, at: last.sentAt ?? last._creationTime, error: last.lastError ?? null }
+            : null,
         };
       }),
     );

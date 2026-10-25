@@ -77,10 +77,30 @@ export const btnGhost: CSSProperties = { ...btnBase, fontSize: 13.5, color: "#3e
 export const pageTitle: CSSProperties = { fontSize: 27, fontWeight: 700, color: A.navyDeep, margin: "0 0 6px", letterSpacing: "-0.01em", lineHeight: 1.15 };
 export const pageDesc: CSSProperties = { color: A.grey, fontSize: 14.5, lineHeight: 1.6, margin: "0 0 24px", maxWidth: 780 };
 
+// Rodzaje maili ze skrzynki nadawczej (convex/outbox.ts) — nazwy do wyświetlania.
+export const MAIL_KIND: Record<string, string> = {
+  received: "Potwierdzenie zgłoszenia",
+  adminNew: "Powiadomienie dla admina",
+  accepted: "Zgłoszenie zaakceptowane",
+  assigned: "Przyjęcie do grupy",
+  reserve: "Lista rezerwowa",
+  rejected: "Odrzucenie",
+  scheduleChanged: "Zmiana grafiku",
+  removed: "Wycofanie przydziału",
+  waitlistOpened: "Nabór otwarty",
+};
+
+export const MAIL_STATUS: Record<string, { label: string; color: string; bg: string }> = {
+  sent: { label: "Wysłany", color: "#1f7a52", bg: "#e5f5ec" },
+  queued: { label: "W kolejce", color: "#8a5c00", bg: "#fff4e0" },
+  failed: { label: "Nieudany", color: "#b4232a", bg: "#fdecec" },
+};
+
 // Nawigacja panelu — pogrupowana tematycznie.
 export const ADMIN_NAV: { href: string; label: string; icon: IconName; group: string }[] = [
   { href: "/admin", label: "Zgłoszenia naboru", icon: "inbox", group: "Na bieżąco" },
   { href: "/admin/grafik-tygodniowy", label: "Grafik", icon: "calendar", group: "Na bieżąco" },
+  { href: "/admin/maile", label: "Wiadomości e-mail", icon: "mail", group: "Na bieżąco" },
   { href: "/admin/poziomy", label: "Poziomy i grupy", icon: "layers", group: "Zajęcia" },
   { href: "/admin/baseny", label: "Baseny", icon: "waves", group: "Zajęcia" },
   { href: "/admin/cennik", label: "Cennik", icon: "tag", group: "Zajęcia" },

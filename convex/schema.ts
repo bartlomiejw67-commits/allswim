@@ -108,6 +108,25 @@ export default defineSchema({
     notified: v.optional(v.boolean()), // czy admin już powiadomił o otwarciu naboru
   }).index("by_email", ["email"]),
 
+  // Skrzynka nadawcza: każdy mail zapisany przed wysyłką (rejestr + ponawianie przy błędach Resend).
+  emailOutbox: defineTable({
+    to: v.string(),
+    kind: v.string(), // rodzaj maila, np. "received", "assigned", "reserve"
+    subject: v.string(),
+    html: v.string(),
+    text: v.optional(v.string()),
+    status: v.union(v.literal("queued"), v.literal("sent"), v.literal("failed")),
+    attempts: v.number(),
+    keySeq: v.optional(v.number()), // numer klucza idempotencji (zmieniany po jednoznacznym odrzuceniu)
+    lastError: v.optional(v.string()),
+    resendId: v.optional(v.string()),
+    sentAt: v.optional(v.number()),
+    enrollmentId: v.optional(v.id("enrollments")),
+    childName: v.optional(v.string()),
+  })
+    .index("by_status", ["status"])
+    .index("by_enrollment", ["enrollmentId"]),
+
   // --- Cennik (edytowalna tabela) ---
   prices: defineTable({
     name: v.string(),

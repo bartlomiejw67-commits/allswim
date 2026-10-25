@@ -1,7 +1,8 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
-import { internal } from "./_generated/api";
 import { requireAdmin, scheduleSignature, groupPoolName } from "./lib";
+import { enqueueEmail, STAGGER_MS } from "./outbox";
+import { tpl, EmailContent } from "./emails";
 import { Doc } from "./_generated/dataModel";
 import { QueryCtx } from "./_generated/server";
 
@@ -88,13 +89,13 @@ export const resendAllAssigned = internalMutation({
       const sig = await scheduleSignature(ctx, e.assignedGroupId);
       const times = formatTimes(sig.times);
       if (!dryRun) {
-        // Rozkładamy wysyłkę w czasie (~1,6/s) — poniżej limitu Resend, bez odbić.
-        await ctx.scheduler.runAfter(sent * 600, internal.emails.sendParticipantAssigned, {
+        await enqueueEmail(ctx, {
           to: e.email,
+          kind: "assigned",
+          enrollmentId: e._id,
           childName: e.name,
-          groupName: group?.name ?? "",
-          poolName,
-          times,
+          content: tpl.participantAssigned({ childName: e.name, groupName: group?.name ?? "", poolName, times }),
+          delayMs: sent * STAGGER_MS,
         });
       }
       sent++;
@@ -118,9 +119,13 @@ export const resendAllReserve = internalMutation({
     for (const e of reserve) {
       if (!e.email) continue;
       if (!dryRun) {
-        await ctx.scheduler.runAfter(sent * 600, internal.emails.sendParticipantReserve, {
+        await enqueueEmail(ctx, {
           to: e.email,
+          kind: "reserve",
+          enrollmentId: e._id,
           childName: e.name,
+          content: tpl.participantReserve({ childName: e.name }),
+          delayMs: sent * STAGGER_MS,
         });
       }
       sent++;
@@ -229,53 +234,26 @@ export const publish = mutation({
         const poolName = await groupPoolName(ctx, e.assignedGroupId);
         const timesText = formatTimes(c.times);
 
+        // Maile do skrzynki nadawczej, rozsunięte w czasie (kolejny co STAGGER_MS) — bez zderzeń z limitem Resend.
+        const send = async (kind: string, content: EmailContent) => {
+          await enqueueEmail(ctx, { to: e.email, kind, content, enrollmentId: e._id, childName: e.name, delayMs: mailsQueued * STAGGER_MS });
+          mailsQueued++;
+        };
         if (c.category === "accepted" && notifyAssigned) {
-          await ctx.scheduler.runAfter(0, internal.emails.sendParticipantAccepted, {
-            to: e.email,
-            childName: e.name,
-          });
-          mailsQueued++;
+          await send("accepted", tpl.participantAccepted({ childName: e.name }));
         } else if (c.category === "assigned" && notifyAssigned) {
-          await ctx.scheduler.runAfter(0, internal.emails.sendParticipantAssigned, {
-            to: e.email,
-            childName: e.name,
-            groupName: group?.name ?? "",
-            poolName,
-            times: timesText,
-          });
-          mailsQueued++;
+          await send("assigned", tpl.participantAssigned({ childName: e.name, groupName: group?.name ?? "", poolName, times: timesText }));
         } else if (c.category === "rejected" && notifyRejected) {
-          await ctx.scheduler.runAfter(0, internal.emails.sendParticipantRejected, {
-            to: e.email,
-            childName: e.name,
-            note: e.decisionNote ?? null,
-          });
-          mailsQueued++;
+          await send("rejected", tpl.participantRejected({ childName: e.name, note: e.decisionNote ?? null }));
         } else if (c.category === "reserve" && notifyReserve) {
-          await ctx.scheduler.runAfter(0, internal.emails.sendParticipantReserve, {
-            to: e.email,
-            childName: e.name,
-          });
-          mailsQueued++;
+          await send("reserve", tpl.participantReserve({ childName: e.name }));
         } else if (c.category === "scheduleChanged" && notifyScheduleChanged) {
-          await ctx.scheduler.runAfter(0, internal.emails.sendParticipantScheduleChanged, {
-            to: e.email,
-            childName: e.name,
-            groupName: group?.name ?? "",
-            poolName,
-            times: timesText,
-          });
-          mailsQueued++;
+          await send("scheduleChanged", tpl.participantScheduleChanged({ childName: e.name, groupName: group?.name ?? "", poolName, times: timesText }));
         } else if (c.category === "removed" && notifyRemoved) {
           const oldGroup = e.publishedGroupId
             ? await ctx.db.get("groups", e.publishedGroupId)
             : null;
-          await ctx.scheduler.runAfter(0, internal.emails.sendParticipantRemoved, {
-            to: e.email,
-            childName: e.name,
-            groupName: oldGroup?.name ?? null,
-          });
-          mailsQueued++;
+          await send("removed", tpl.participantRemoved({ childName: e.name, groupName: oldGroup?.name ?? null }));
         }
       }
 
