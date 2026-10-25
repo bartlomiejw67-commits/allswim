@@ -200,14 +200,15 @@ export default defineSchema({
     galleryTitle: v.optional(v.string()),
     regulationsEyebrow: v.optional(v.string()),
     regulationsTitle: v.optional(v.string()),
+    campsOfferActive: v.optional(v.boolean()), // czy jest aktualna oferta obozu (brak = wersja „wkrótce” + zdjęcia)
     campsBadge: v.optional(v.string()),
     campsTitle: v.optional(v.string()),
     campsDescription: v.optional(v.string()),
     campsDates: v.optional(v.string()), // termin kolonii
     campsLocation: v.optional(v.string()), // miejscowość
     campsPrice: v.optional(v.string()), // cena
-    campsUpcomingHeading: v.optional(v.string()),
-    campsEmptyText: v.optional(v.string()),
+    campsUpcomingHeading: v.optional(v.string()), // tytuł sekcji, gdy brak oferty
+    campsEmptyText: v.optional(v.string()), // opis sekcji, gdy brak oferty
     campsPhotosHeading: v.optional(v.string()),
     // Formularz naboru:
     formTitle: v.optional(v.string()),

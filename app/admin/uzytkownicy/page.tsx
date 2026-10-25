@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { A, card, input, btnDanger } from "@/components/admin/ui";
+import { A, card, input, btnDanger, pageTitle, pageDesc } from "@/components/admin/ui";
 
 export default function Page() {
   const users = useQuery(api.users.list);
@@ -38,8 +38,8 @@ export default function Page() {
 
   return (
     <div>
-      <h1 className="font-fredoka" style={{ fontSize: 28, color: A.navy, margin: "0 0 4px" }}>Użytkownicy</h1>
-      <p style={{ color: A.grey, fontSize: 14, margin: "0 0 20px" }}>Konta rodziców i administratorów. Możesz zmienić rolę lub usunąć konto. Własnego konta nie można zmienić ani usunąć.</p>
+      <h1 className="font-fredoka" style={pageTitle}>Użytkownicy</h1>
+      <p style={pageDesc}>Konta rodziców i administratorów. Możesz zmienić rolę lub usunąć konto. Własnego konta nie można zmienić ani usunąć.</p>
 
       {users === undefined && <p style={{ color: A.grey }}>Ładowanie…</p>}
       {users && users.length === 0 && <div style={{ ...card, textAlign: "center", color: A.grey }}>Brak użytkowników.</div>}

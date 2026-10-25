@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { A, card, input, label, btnPrimary, btnDanger, btnSecondary, btnGhost } from "@/components/admin/ui";
+import { A, card, input, label, btnPrimary, btnDanger, btnSecondary, btnGhost, pageTitle, pageDesc } from "@/components/admin/ui";
+import { Icon } from "@/components/Icons";
 
 const DAYS = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"];
 
@@ -36,8 +37,8 @@ export default function Page() {
 
   return (
     <div>
-      <h1 className="font-fredoka" style={{ fontSize: 28, color: A.navy, margin: "0 0 4px" }}>Grafik</h1>
-      <p style={{ color: A.grey, fontSize: 14, margin: "0 0 18px", maxWidth: 760 }}>
+      <h1 className="font-fredoka" style={pageTitle}>Grafik</h1>
+      <p style={pageDesc}>
         U góry grupy z przydzielonymi dziećmi — przy każdym dziecku wybierz <strong>basen</strong>, na który chodzi.
         Niżej, w siatce każdego basenu, dodawaj <strong>terminy zajęć</strong> grup. Zmiany wejdą w życie i powiadomią
         rodziców dopiero po kliknięciu <strong>„Opublikuj zmiany”</strong> (u góry panelu).
@@ -46,8 +47,8 @@ export default function Page() {
       {/* Widoczność grafiku */}
       <div style={{ ...card, marginBottom: 22, display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center", justifyContent: "space-between", background: live ? "#e8f7ee" : "#fff3da", border: live ? "1px solid #b7e4c7" : "1px solid #f0dca6" }}>
         <div>
-          <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 16, color: live ? "#1f8a5b" : "#9a6a00" }}>
-            {live ? "✅ Grafik widoczny publicznie" : "🔒 Grafik ukryty"}
+          <div className="font-fredoka" style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 700, fontSize: 16, color: live ? "#1f8a5b" : "#9a6a00" }}>
+            <Icon name={live ? "check" : "alert"} size={18} stroke={2.2} /> {live ? "Grafik widoczny publicznie" : "Grafik ukryty"}
           </div>
           <div style={{ fontSize: 13, color: A.grey, marginTop: 2 }}>
             {live
@@ -142,7 +143,7 @@ function PoolGrid({ pool, groups, sessions }: { pool: Pool; groups: Group[]; ses
   return (
     <div style={{ ...card, padding: 16 }}>
       <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 17, color: A.navy, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-        🏊 {pool.name}
+        <Icon name="waves" size={19} /> {pool.name}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7,minmax(140px,1fr))", gap: 8, overflowX: "auto" }}>
@@ -298,7 +299,7 @@ function WeeklyOverview({ pools, groups, sessions }: { pools: Pool[]; groups: Gr
                           {poolById(s.poolId)?.name ?? "?"}
                         </div>
                         {g?.instructor && instr === "all" && (
-                          <div style={{ fontSize: 11, color: A.grey, marginTop: 2 }}>👤 {g.instructor}</div>
+                          <div style={{ fontSize: 11.5, color: A.grey, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><Icon name="whistle" size={12} /> {g.instructor}</div>
                         )}
                       </div>
                     );

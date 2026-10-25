@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { A, card, input, label, btnPrimary, btnDanger, btnSecondary, btnGhost } from "@/components/admin/ui";
+import { A, card, input, label, btnPrimary, btnDanger, btnSecondary, btnGhost, pageTitle, pageDesc } from "@/components/admin/ui";
 import { compressImage } from "@/components/imageCompress";
 
 type Cat = "gallery" | "camps" | "about";
@@ -41,8 +41,8 @@ export default function Page() {
 
   return (
     <div>
-      <h1 className="font-fredoka" style={{ fontSize: 28, color: A.navy, margin: "0 0 4px" }}>Galeria</h1>
-      <p style={{ color: A.grey, fontSize: 14, margin: "0 0 20px" }}>Wgrywaj zdjęcia do galerii lub do sekcji obozów. „Na głównej” oznacza wyświetlanie wśród pierwszych zdjęć.</p>
+      <h1 className="font-fredoka" style={pageTitle}>Galeria</h1>
+      <p style={pageDesc}>Wgrywaj zdjęcia do galerii lub do sekcji obozów. „Na głównej” oznacza wyświetlanie wśród pierwszych zdjęć.</p>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
         <button onClick={() => setCat("gallery")} style={{ ...btnGhost, ...(cat === "gallery" ? { background: A.navy, color: "#fff" } : {}) }}>Galeria</button>

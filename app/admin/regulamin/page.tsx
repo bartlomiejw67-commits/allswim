@@ -6,7 +6,7 @@ import { FunctionReference } from "convex/server";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { SimpleCrud, Field } from "@/components/admin/SimpleCrud";
-import { A, card, btnPrimary, btnDanger, btnSecondary } from "@/components/admin/ui";
+import { A, card, btnPrimary, btnDanger, btnSecondary, pageTitle } from "@/components/admin/ui";
 
 const fields: Field[] = [
   { key: "title", label: "Tytuł sekcji" },
@@ -23,7 +23,7 @@ export default function Page() {
 
   return (
     <div>
-      <h1 className="font-fredoka" style={{ fontSize: 28, color: A.navy, margin: "0 0 4px" }}>Dokumenty</h1>
+      <h1 className="font-fredoka" style={pageTitle}>Dokumenty</h1>
       <p style={{ color: A.grey, fontSize: 14, margin: "0 0 18px" }}>Pliki PDF do pobrania na stronie (regulamin, umowa) oraz treść regulaminu w rozwijanych sekcjach.</p>
 
       <PdfCard

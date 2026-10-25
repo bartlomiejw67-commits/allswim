@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { A, card, input, label, btnPrimary, btnDanger, btnSecondary } from "@/components/admin/ui";
+import { A, card, input, label, btnPrimary, btnDanger, btnSecondary, pageTitle, pageDesc } from "@/components/admin/ui";
+import { Icon } from "@/components/Icons";
 import { compressImage } from "@/components/imageCompress";
 
 type Instructor = {
@@ -31,8 +32,8 @@ export default function Page() {
 
   return (
     <div>
-      <h1 className="font-fredoka" style={{ fontSize: 28, color: A.navy, margin: "0 0 4px" }}>Instruktorzy</h1>
-      <p style={{ color: A.grey, fontSize: 14, margin: "0 0 20px", maxWidth: 760 }}>
+      <h1 className="font-fredoka" style={pageTitle}>Instruktorzy</h1>
+      <p style={pageDesc}>
         Profile pokazują się w sekcji <strong>„O nas”</strong> na stronie. Pierwsza osoba (Ola) pochodzi z zakładki
         <strong> Ustawienia → sekcja o nas</strong> (a jej zdjęcia z <strong>Galeria → „O nas”</strong>); tutaj dodajesz
         <strong> kolejnych instruktorów</strong> — każdemu można wgrać <strong>do 3 zdjęć</strong> (tworzą kolaż).
@@ -66,6 +67,18 @@ function InstructorCard({ it }: { it: Instructor }) {
   const removePhotoAt = useMutation(api.instructors.removePhotoAt);
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [flash, setFlash] = useState(false);
+
+  // Zapis automatyczny po wyjściu z pola + krótkie potwierdzenie „Zapisano".
+  async function save(patch: { name?: string; role?: string; bio?: string }) {
+    try {
+      await update({ id: it._id as Id<"instructors">, ...patch });
+      setFlash(true);
+      setTimeout(() => setFlash(false), 2200);
+    } catch (e) {
+      alert((e as { data?: string }).data ?? "Nie udało się zapisać.");
+    }
+  }
 
   async function onFiles(files: FileList | null) {
     if (!files || !files.length) return;
@@ -98,11 +111,11 @@ function InstructorCard({ it }: { it: Instructor }) {
             <div key={i} style={{ position: "relative", width: 88, height: 88, borderRadius: 12, overflow: "hidden", border: "1px solid #d6e7f2", background: "#eaf4fb" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={u} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              <button title="Usuń zdjęcie" onClick={() => { if (confirm("Usunąć to zdjęcie?")) removePhotoAt({ id: it._id as Id<"instructors">, index: i }); }} style={{ position: "absolute", top: 4, right: 4, width: 24, height: 24, borderRadius: "50%", border: "none", background: "rgba(180,35,42,0.92)", color: "#fff", cursor: "pointer", fontWeight: 800, lineHeight: 1, fontSize: 14 }}>×</button>
+              <button title="Usuń zdjęcie" onClick={() => { if (confirm("Usunąć to zdjęcie?")) removePhotoAt({ id: it._id as Id<"instructors">, index: i }); }} style={{ position: "absolute", top: 4, right: 4, width: 24, height: 24, borderRadius: "50%", border: "none", background: "rgba(180,35,42,0.92)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="close" size={13} stroke={2.4} /></button>
             </div>
           ))}
           {it.photoUrls.length === 0 && (
-            <div style={{ width: 88, height: 88, borderRadius: 12, background: "#eaf4fb", border: "1px solid #d6e7f2", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, opacity: 0.5 }}>🧑‍🏫</div>
+            <div style={{ width: 88, height: 88, borderRadius: 12, background: "#eaf4fb", border: "1px solid #d6e7f2", display: "flex", alignItems: "center", justifyContent: "center", color: "#8fb4cc" }}><Icon name="user" size={30} stroke={1.6} /></div>
           )}
         </div>
         <input ref={fileRef} type="file" accept="image/*" multiple onChange={(e) => onFiles(e.target.files)} style={{ display: "none" }} />
@@ -111,20 +124,24 @@ function InstructorCard({ it }: { it: Instructor }) {
         </button>
       </div>
 
-      <div style={{ flex: 1, minWidth: 240, display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ flex: 1, minWidth: 240, display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, fontSize: 12.5, color: A.grey }}>
+          <span>Zmiany zapisują się automatycznie po wyjściu z pola.</span>
+          {flash && <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#1f8a5b", fontWeight: 600, fontSize: 13.5 }}><Icon name="check" size={15} stroke={2.2} /> Zapisano</span>}
+        </div>
         <div>
           <label style={label}>Imię i nazwisko</label>
-          <input defaultValue={it.name} style={input} onBlur={(e) => { if (e.target.value.trim() && e.target.value !== it.name) update({ id: it._id as Id<"instructors">, name: e.target.value.trim() }); }} />
+          <input defaultValue={it.name} style={input} onBlur={(e) => { if (e.target.value.trim() && e.target.value !== it.name) save({ name: e.target.value.trim() }); }} />
         </div>
         <div>
           <label style={label}>Rola / funkcja</label>
-          <input defaultValue={it.role ?? ""} placeholder="np. Instruktorka pływania" style={input} onBlur={(e) => { if (e.target.value !== (it.role ?? "")) update({ id: it._id as Id<"instructors">, role: e.target.value }); }} />
+          <input defaultValue={it.role ?? ""} placeholder="np. Instruktorka pływania" style={input} onBlur={(e) => { if (e.target.value !== (it.role ?? "")) save({ role: e.target.value }); }} />
         </div>
         <div>
           <label style={label}>Krótki opis</label>
-          <textarea defaultValue={it.bio ?? ""} rows={3} placeholder="Kilka zdań o instruktorze…" style={{ ...input, resize: "vertical" }} onBlur={(e) => { if (e.target.value !== (it.bio ?? "")) update({ id: it._id as Id<"instructors">, bio: e.target.value }); }} />
+          <textarea defaultValue={it.bio ?? ""} rows={4} placeholder="Kilka zdań o instruktorze…" style={{ ...input, resize: "vertical", lineHeight: 1.5 }} onBlur={(e) => { if (e.target.value !== (it.bio ?? "")) save({ bio: e.target.value }); }} />
         </div>
-        <button style={{ ...btnDanger, alignSelf: "flex-start", padding: "8px 16px" }} onClick={() => { if (confirm(`Usunąć instruktora „${it.name}”?`)) remove({ id: it._id as Id<"instructors"> }); }}>Usuń instruktora</button>
+        <button style={{ ...btnDanger, alignSelf: "flex-start" }} onClick={() => { if (confirm(`Usunąć instruktora „${it.name}”?`)) remove({ id: it._id as Id<"instructors"> }); }}><Icon name="trash" size={15} /> Usuń instruktora</button>
       </div>
     </div>
   );

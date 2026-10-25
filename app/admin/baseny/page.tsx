@@ -26,6 +26,7 @@ export default function Page() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onUpdate={(id, v) => update({ id: id as Id<"pools">, ...(v as any) })}
       onRemove={(id) => remove({ id: id as Id<"pools"> })}
+      addLabel="Dodaj basen"
     />
   );
 }

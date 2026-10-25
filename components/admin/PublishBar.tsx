@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { A, btnPrimary, btnGhost, btnSecondary } from "./ui";
+import { A, btnAccent, btnGhost, btnSecondary } from "./ui";
+import { Icon } from "@/components/Icons";
 
 // Globalny pasek publikacji zmian (nabór + grafik). Widoczny na każdej stronie panelu.
 // Zmiany wprowadzane w panelu są "robocze" — wchodzą w życie dla rodziców i wysyłają
@@ -48,32 +49,26 @@ export default function PublishBar() {
 
   return (
     <>
-      <div style={{ position: "sticky", top: 0, zIndex: 30, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", background: dirty > 0 ? "#fff7ec" : "#f1f8f3", border: `1px solid ${dirty > 0 ? "#f0dca6" : "#cfe9d6"}`, borderRadius: 14, padding: "10px 16px", marginBottom: 22 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 18 }}>{dirty > 0 ? "📝" : "✅"}</span>
-          <div>
-            <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 14, color: dirty > 0 ? "#9a6a00" : "#1f8a5b" }}>
-              {dirty > 0 ? `${dirty} niezapublikowanych zmian` : "Wszystko opublikowane"}
-            </div>
-            <div style={{ fontSize: 12, color: A.grey }}>
-              {dirty > 0 ? "Zmiany naboru/grafiku czekają na publikację." : "Brak zmian do opublikowania."}
-            </div>
-          </div>
-        </div>
-        <button
-          style={dirty > 0 ? btnPrimary : { ...btnGhost, cursor: "default" }}
-          disabled={dirty === 0}
-          onClick={() => setOpen(true)}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div
+          title={dirty > 0 ? "Zmiany naboru/grafiku czekają na publikację." : "Brak zmian do opublikowania."}
+          style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, fontWeight: 600, color: dirty > 0 ? "#8a5c00" : "#1f7a52", background: dirty > 0 ? "#fff4e0" : "#e9f6ef", border: `1px solid ${dirty > 0 ? "#f3dcae" : "#cfe9d9"}`, borderRadius: 999, padding: "7px 13px", whiteSpace: "nowrap" }}
         >
-          Opublikuj zmiany
-        </button>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: dirty > 0 ? A.orange : "#2fa36b", display: "inline-block", flex: "none" }} />
+<span className="adm-pub-text">{dirty > 0 ? `${dirty} ${dirty === 1 ? "zmiana" : dirty % 10 >= 2 && dirty % 10 <= 4 && (dirty % 100 < 12 || dirty % 100 > 14) ? "zmiany" : "zmian"} do publikacji` : "Wszystko opublikowane"}</span>
+        </div>
+        {dirty > 0 && (
+          <button style={btnAccent} onClick={() => setOpen(true)}>
+            <Icon name="send" size={16} /> Opublikuj
+          </button>
+        )}
       </div>
 
       {open && (
-        <div onClick={() => !busy && setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(10,63,99,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "min(520px,100%)", background: "#fff", borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.3)", padding: 26, maxHeight: "85vh", overflowY: "auto" }}>
-            <h2 className="font-fredoka" style={{ fontSize: 22, color: A.navy, margin: "0 0 6px" }}>Opublikować zmiany?</h2>
-            <p style={{ fontSize: 14, color: A.grey, margin: "0 0 18px" }}>
+        <div onClick={() => !busy && setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(8,30,50,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "min(540px,100%)", background: "#fff", borderRadius: 20, boxShadow: "0 30px 80px rgba(0,0,0,0.3)", padding: 28, maxHeight: "85vh", overflowY: "auto" }}>
+            <h2 className="font-fredoka" style={{ fontSize: 23, color: A.navyDeep, margin: "0 0 6px" }}>Opublikować zmiany?</h2>
+            <p style={{ fontSize: 14.5, color: A.grey, margin: "0 0 18px", lineHeight: 1.55 }}>
               Zmiany staną się widoczne dla rodziców. Zaznacz, o czym powiadomić mailem (powiadomienia idą tylko za realne zmiany).
             </p>
 
@@ -118,7 +113,7 @@ export default function PublishBar() {
             <div style={{ display: "flex", gap: 10, marginTop: 22, justifyContent: "flex-end", flexWrap: "wrap" }}>
               <button style={btnGhost} disabled={busy} onClick={() => setOpen(false)}>Anuluj</button>
               <button style={btnSecondary} disabled={busy} onClick={() => doPublish(true)}>{busy ? "…" : "Opublikuj bez maili"}</button>
-              <button style={btnPrimary} disabled={busy} onClick={() => doPublish(false)}>{busy ? "Publikowanie…" : "Opublikuj i powiadom"}</button>
+              <button style={btnAccent} disabled={busy} onClick={() => doPublish(false)}>{busy ? "Publikowanie…" : "Opublikuj i powiadom"}</button>
             </div>
           </div>
         </div>
@@ -135,14 +130,14 @@ function NotifyRow({ checked, disabled, onChange, title, items }: {
   items: string[];
 }) {
   return (
-    <div style={{ border: "1px solid #eaf2f8", borderRadius: 12, padding: "12px 14px", opacity: disabled ? 0.55 : 1 }}>
+    <div style={{ border: `1px solid ${A.line}`, borderRadius: 12, padding: "12px 14px", opacity: disabled ? 0.5 : 1, background: disabled ? "#fafcfd" : "#fff" }}>
       <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: disabled ? "default" : "pointer" }}>
-        <input type="checkbox" checked={checked && !disabled} disabled={disabled} onChange={(e) => onChange(e.target.checked)} style={{ width: 16, height: 16 }} />
-        <span style={{ fontWeight: 800, fontSize: 14, color: "#1b3a4b" }}>{title}</span>
-        <span style={{ marginLeft: "auto", fontSize: 12, fontWeight: 800, color: A.navy, background: "#e8f4fb", borderRadius: 999, padding: "2px 10px" }}>{items.length}</span>
+        <input type="checkbox" checked={checked && !disabled} disabled={disabled} onChange={(e) => onChange(e.target.checked)} style={{ width: 17, height: 17 }} />
+        <span style={{ fontWeight: 600, fontSize: 14.5, color: A.text }}>{title}</span>
+        <span style={{ marginLeft: "auto", fontSize: 12.5, fontWeight: 700, color: A.navy, background: "#e8f4fb", borderRadius: 999, padding: "2px 10px" }}>{items.length}</span>
       </label>
       {items.length > 0 && (
-        <div style={{ fontSize: 12, color: A.grey, marginTop: 8, display: "flex", flexDirection: "column", gap: 3, paddingLeft: 26 }}>
+        <div style={{ fontSize: 13, color: A.grey, marginTop: 8, display: "flex", flexDirection: "column", gap: 3, paddingLeft: 27 }}>
           {items.slice(0, 6).map((t, i) => <span key={i}>• {t}</span>)}
           {items.length > 6 && <span>…i {items.length - 6} więcej</span>}
         </div>

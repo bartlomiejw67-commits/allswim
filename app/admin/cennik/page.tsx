@@ -29,6 +29,16 @@ export default function Page() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onUpdate={(id, v) => update({ id: id as Id<"prices">, ...(v as any) })}
       onRemove={(id) => remove({ id: id as Id<"prices"> })}
+      addLabel="Dodaj pakiet"
+      summarize={(it) => ({
+        title: String(it.name ?? "") || "(bez nazwy)",
+        subtitle: [it.popular ? "Najczęściej wybierany" : "", String(it.description ?? "")].filter(Boolean).join(" · ") || undefined,
+        right: (
+          <span style={{ fontSize: 17, fontWeight: 700, color: "#0b3a5e", whiteSpace: "nowrap" }}>
+            {String(it.amount ?? "")} <span style={{ fontSize: 13, fontWeight: 600, color: "#5f7380" }}>{String(it.unit ?? "")}</span>
+          </span>
+        ),
+      })}
     />
   );
 }

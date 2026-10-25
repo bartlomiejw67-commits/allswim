@@ -166,6 +166,7 @@ export const update = mutation({
     galleryTitle: v.optional(v.string()),
     regulationsEyebrow: v.optional(v.string()),
     regulationsTitle: v.optional(v.string()),
+    campsOfferActive: v.optional(v.boolean()),
     campsBadge: v.optional(v.string()),
     campsTitle: v.optional(v.string()),
     campsDescription: v.optional(v.string()),

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { A, card, btnPrimary, btnDanger, btnGhost, input } from "@/components/admin/ui";
+import { A, card, btnPrimary, btnSecondary, btnDanger, btnGhost, input, pageTitle, pageDesc } from "@/components/admin/ui";
+import { Icon } from "@/components/Icons";
 
 type StatusFilter = "pending" | "approved" | "rejected" | "reserve" | "all";
 
@@ -19,6 +20,7 @@ export default function AdminEnrollments() {
   const [filter, setFilter] = useState<StatusFilter>("pending");
   const enrollments = useQuery(api.enrollments.list, filter === "all" ? {} : { status: filter });
   const groups = useQuery(api.groups.list);
+  const pendingCount = useQuery(api.enrollments.pendingCount);
   const decide = useMutation(api.enrollments.decide);
   const remove = useMutation(api.enrollments.remove);
   const unassign = useMutation(api.enrollments.unassign);
@@ -97,73 +99,92 @@ export default function AdminEnrollments() {
 
   return (
     <div>
-      <h1 className="font-fredoka" style={{ fontSize: 28, color: A.navy, margin: "0 0 4px" }}>Zgłoszenia naboru</h1>
-      <p style={{ color: A.grey, fontSize: 14, margin: "0 0 20px" }}>Osoby kontynuujące są wyżej na liście. Zaakceptuj i przydziel do grupy, odrzuć albo dodaj na <strong>Listę rezerwową</strong> (gdy brak miejsc). Gdy zwolni się miejsce, wejdź w zakładkę „Lista rezerwowa" i kliknij <strong>„Przydziel do grupy"</strong>. Maile do rodziców wychodzą dopiero po <strong>opublikowaniu zmian</strong>.</p>
+      <h1 className="font-fredoka" style={pageTitle}>Zgłoszenia naboru</h1>
+      <p style={pageDesc}>Osoby kontynuujące są wyżej na liście. Zaakceptuj i przydziel do grupy, odrzuć albo dodaj na <strong>Listę rezerwową</strong> (gdy brak miejsc). Gdy zwolni się miejsce, wejdź w zakładkę „Lista rezerwowa" i kliknij <strong>„Przydziel do grupy"</strong>. Maile do rodziców wychodzą dopiero po <strong>opublikowaniu zmian</strong>.</p>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
-        {tabs.map((t) => (
-          <button key={t.key} onClick={() => setFilter(t.key)} style={{ ...btnGhost, ...(filter === t.key ? { background: A.navy, color: "#fff" } : {}) }}>
-            {t.label}
-          </button>
-        ))}
+      <div role="tablist" aria-label="Status zgłoszeń" style={{ display: "inline-flex", flexWrap: "wrap", gap: 4, background: "#e7eef4", borderRadius: 12, padding: 4, marginBottom: 20 }}>
+        {tabs.map((t) => {
+          const on = filter === t.key;
+          return (
+            <button key={t.key} role="tab" aria-selected={on} onClick={() => setFilter(t.key)} style={{ display: "inline-flex", alignItems: "center", gap: 7, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 14, fontWeight: on ? 700 : 600, color: on ? A.navy : "#4d6371", background: on ? "#fff" : "transparent", boxShadow: on ? "0 2px 8px rgba(16,42,67,0.1)" : "none", borderRadius: 9, padding: "8px 14px" }}>
+              {t.label}
+              {t.key === "pending" && !!pendingCount && (
+                <span style={{ minWidth: 20, height: 20, padding: "0 6px", borderRadius: 999, background: A.orange, color: "#fff", fontSize: 11.5, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{pendingCount}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {enrollments === undefined && <p style={{ color: A.grey }}>Ładowanie…</p>}
       {enrollments && enrollments.length === 0 && (
-        <div style={{ ...card, textAlign: "center", color: A.grey }}>Brak zgłoszeń w tej kategorii.</div>
+        <div style={{ ...card, textAlign: "center", color: A.grey, padding: "40px 22px" }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 10, color: "#9fb4c2" }}><Icon name="inbox" size={34} stroke={1.6} /></div>
+          Brak zgłoszeń w tej kategorii.
+        </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {enrollments?.map((e) => {
           const st = STATUS_LABEL[e.status];
           const date = new Date(e._creationTime).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric" });
+          const initials = e.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
+          const chip: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 7, fontSize: 14, color: "#33495a", background: "#f3f7fa", border: `1px solid ${A.line}`, borderRadius: 9, padding: "6px 10px", textDecoration: "none", maxWidth: "100%", overflowWrap: "anywhere" };
           return (
-            <div key={e._id} style={card}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ minWidth: 220 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <span className="font-fredoka" style={{ fontSize: 18, fontWeight: 700, color: "#1b3a4b" }}>{e.name}</span>
-                    {e.isContinuing ? (
-                      <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: A.orange, borderRadius: 999, padding: "3px 10px" }}>KONTYNUUJE</span>
-                    ) : (
-                      <span style={{ fontSize: 11, fontWeight: 800, color: A.grey, background: "#eef3f6", borderRadius: 999, padding: "3px 10px" }}>NOWY</span>
-                    )}
-                    {st && <span style={{ fontSize: 11, fontWeight: 800, color: st.color, background: st.bg, borderRadius: 999, padding: "3px 10px" }}>{st.label}</span>}
-                  </div>
-                  <div style={{ fontSize: 14, color: A.grey, marginTop: 6, display: "flex", flexDirection: "column", gap: 2 }}>
-                    <span>📧 {e.email}</span>
-                    {e.phone && <span>📞 {e.phone}</span>}
-                    {e.childAge && <span>🎂 wiek: {e.childAge}</span>}
-                    {e.levelLabel && <span>📊 poziom: {e.levelLabel}</span>}
-                    {e.note && <span>💬 wiadomość: {e.note}</span>}
-                    {e.assignedGroupName && <span>👥 grupa: {e.assignedGroupName}</span>}
-                    <span style={{ fontSize: 12, color: "#9aabb5" }}>zgłoszono: {date}</span>
+            <div key={e._id} style={{ ...card, padding: 0, overflow: "hidden", borderLeft: `4px solid ${st?.color ?? A.line}` }}>
+              <div style={{ padding: "18px 20px 16px" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                  <div aria-hidden style={{ width: 44, height: 44, borderRadius: 12, flex: "none", background: st?.bg ?? "#eef3f7", color: st?.color ?? A.navy, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16 }}>{initials || "?"}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span className="font-fredoka" style={{ fontSize: 19, fontWeight: 600, color: A.navyDeep }}>{e.name}</span>
+                      {e.isContinuing ? (
+                        <span style={{ fontSize: 12, fontWeight: 700, color: "#9a5a00", background: "#fff1d9", borderRadius: 999, padding: "3px 10px" }}>Kontynuuje</span>
+                      ) : (
+                        <span style={{ fontSize: 12, fontWeight: 700, color: "#4d6371", background: "#eef3f7", borderRadius: 999, padding: "3px 10px" }}>Nowy</span>
+                      )}
+                      {st && <span style={{ fontSize: 12, fontWeight: 700, color: st.color, background: st.bg, borderRadius: 999, padding: "3px 10px" }}>{st.label}</span>}
+                    </div>
+                    <div style={{ fontSize: 13, color: "#8a9ba7", marginTop: 3 }}>Zgłoszono {date}</div>
                   </div>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
-                  {(e.status === "pending" || e.status === "reserve") && (
-                    <>
-                      <select value={groupChoice[e._id] ?? ""} onChange={(ev) => setGroupChoice((g) => ({ ...g, [e._id]: ev.target.value }))} style={{ ...input, width: 220 }}>
-                        <option value="">— wybierz grupę —</option>
-                        {groups?.map((g) => (
-                          <option key={g._id} value={g._id}>{g.name}</option>
-                        ))}
-                      </select>
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                        <button disabled={busy === e._id} style={btnPrimary} onClick={() => approve(e._id)}>{e.status === "reserve" ? "Przydziel do grupy" : "Zaakceptuj"}</button>
-                        {e.status === "pending" && (
-                          <button disabled={busy === e._id} style={{ ...btnGhost, borderColor: "#6b4bbd", color: "#6b4bbd" }} onClick={() => putReserve(e._id)}>Lista rezerwowa</button>
-                        )}
-                        <button disabled={busy === e._id} style={btnGhost} onClick={() => reject(e._id)}>Odrzuć</button>
-                      </div>
-                    </>
-                  )}
-                  {e.status !== "pending" && (
-                    <button disabled={busy === e._id} style={btnGhost} onClick={() => undo(e._id)}>↩ Cofnij decyzję</button>
-                  )}
-                  <button disabled={busy === e._id} style={btnDanger} onClick={() => del(e._id)}>Usuń</button>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
+                  <a href={`mailto:${e.email}`} style={chip}><Icon name="mail" size={15} color={A.navy} /> {e.email}</a>
+                  {e.phone && <a href={`tel:${e.phone.replace(/[^+\d]/g, "")}`} style={chip}><Icon name="phone" size={15} color={A.navy} /> {e.phone}</a>}
+                  {e.childAge && <span style={chip}><Icon name="cake" size={15} color={A.navy} /> Wiek: {e.childAge}</span>}
+                  {e.levelLabel && <span style={chip}><Icon name="layers" size={15} color={A.navy} /> {e.levelLabel}</span>}
+                  {e.assignedGroupName && <span style={{ ...chip, background: "#e9f6ef", borderColor: "#cfe9d9", color: "#1f6b47" }}><Icon name="users" size={15} /> {e.assignedGroupName}</span>}
                 </div>
+
+                {e.note && (
+                  <div style={{ display: "flex", gap: 9, marginTop: 12, fontSize: 14, lineHeight: 1.55, color: "#33495a", background: "#fffaf0", border: "1px solid #f4e3c1", borderRadius: 10, padding: "10px 12px" }}>
+                    <span style={{ color: A.orange, marginTop: 2, flex: "none" }}><Icon name="message" size={16} /></span>
+                    <span>{e.note}</span>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "12px 20px", background: "#f8fbfd", borderTop: `1px solid ${A.line}` }}>
+                {(e.status === "pending" || e.status === "reserve") && (
+                  <>
+                    <select aria-label="Grupa" value={groupChoice[e._id] ?? ""} onChange={(ev) => setGroupChoice((g) => ({ ...g, [e._id]: ev.target.value }))} style={{ ...input, width: "auto", minWidth: 220, flex: "1 1 220px", maxWidth: 320, padding: "9px 12px" }}>
+                      <option value="">— wybierz grupę —</option>
+                      {groups?.map((g) => (
+                        <option key={g._id} value={g._id}>{g.name}</option>
+                      ))}
+                    </select>
+                    <button disabled={busy === e._id} style={btnPrimary} onClick={() => approve(e._id)}><Icon name="check" size={16} stroke={2.2} /> {e.status === "reserve" ? "Przydziel do grupy" : "Zaakceptuj"}</button>
+                    {e.status === "pending" && (
+                      <button disabled={busy === e._id} style={{ ...btnSecondary, color: "#6b4bbd", borderColor: "#d9cff3" }} onClick={() => putReserve(e._id)}>Lista rezerwowa</button>
+                    )}
+                    <button disabled={busy === e._id} style={btnGhost} onClick={() => reject(e._id)}>Odrzuć</button>
+                  </>
+                )}
+                {e.status !== "pending" && (
+                  <button disabled={busy === e._id} style={btnGhost} onClick={() => undo(e._id)}><Icon name="undo" size={15} /> Cofnij decyzję</button>
+                )}
+                <button disabled={busy === e._id} style={{ ...btnDanger, marginLeft: "auto" }} onClick={() => del(e._id)} aria-label="Usuń zgłoszenie"><Icon name="trash" size={15} /> Usuń</button>
               </div>
             </div>
           );

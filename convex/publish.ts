@@ -130,6 +130,30 @@ export const resendAllReserve = internalMutation({
   },
 });
 
+// Jednorazowo z CLI: zeruje licznik niezapublikowanych zmian BEZ wysyłania maili i BEZ cofania
+// stanu roboczego — przesuwa snapshot „opublikowanego" stanu do bieżącego dla zmienionych zgłoszeń.
+// Nie zmienia widoczności grafiku. `npx convex run publish:acknowledgeSilently '{"dryRun":true}'`.
+export const acknowledgeSilently = internalMutation({
+  args: { dryRun: v.optional(v.boolean()) },
+  handler: async (ctx, { dryRun }) => {
+    const all = await ctx.db.query("enrollments").take(2000);
+    const touched: string[] = [];
+    for (const e of all) {
+      const c = await computeChange(ctx, e);
+      if (!c.dirty) continue;
+      touched.push(`${e.name} (${e.publishedStatus ?? "pending"} → ${e.status}${c.category ? `, ${c.category}` : ""})`);
+      if (!dryRun) {
+        await ctx.db.patch("enrollments", e._id, {
+          publishedStatus: e.status,
+          publishedGroupId: e.assignedGroupId,
+          publishedTimesHash: c.currentHash,
+        });
+      }
+    }
+    return { count: touched.length, dryRun: !!dryRun, touched };
+  },
+});
+
 // Admin: podsumowanie niezapublikowanych zmian (do przycisku i popupu).
 export const pendingChanges = query({
   args: {},
