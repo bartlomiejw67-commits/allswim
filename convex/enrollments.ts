@@ -198,6 +198,7 @@ export const list = query({
         v.literal("approved"),
         v.literal("rejected"),
         v.literal("reserve"),
+        v.literal("resigned"),
       ),
     ),
   },
@@ -328,6 +329,47 @@ export const reserve = mutation({
   },
 });
 
+// Admin: rezygnacja z zajęć — zwalnia miejsce w grupie, historia zostaje (zakładka „Rezygnacje").
+// Rodzic zobaczy „zajęcia zakończone" po publikacji; mail z potwierdzeniem opcjonalny (przy publikacji).
+export const resign = mutation({
+  args: { id: v.id("enrollments"), note: v.optional(v.string()) },
+  handler: async (ctx, { id, note }) => {
+    await requireAdmin(ctx);
+    const e = await ctx.db.get("enrollments", id);
+    if (!e) throw new ConvexError("Nie znaleziono zgłoszenia.");
+    await ctx.db.patch("enrollments", id, {
+      status: "resigned",
+      assignedGroupId: undefined,
+      resignedAt: Date.now(),
+      decisionNote: note?.trim() ? note.trim() : e.decisionNote,
+    });
+    return true;
+  },
+});
+
+// Admin: przeniesienie przyjętego dziecka do innej grupy (z kontrolą limitu miejsc).
+// Po publikacji rodzic dostaje „Zmiana grafiku zajęć" z nową grupą i terminami.
+export const changeGroup = mutation({
+  args: { id: v.id("enrollments"), groupId: v.id("groups") },
+  handler: async (ctx, { id, groupId }) => {
+    await requireAdmin(ctx);
+    const e = await ctx.db.get("enrollments", id);
+    if (!e) throw new ConvexError("Nie znaleziono zgłoszenia.");
+    if (e.status !== "approved") throw new ConvexError("Grupę można zmienić tylko przyjętemu dziecku.");
+    if (e.assignedGroupId === groupId) return true;
+    const group = await ctx.db.get("groups", groupId);
+    if (!group) throw new ConvexError("Nie znaleziono grupy.");
+    const inGroup = await ctx.db
+      .query("enrollments")
+      .withIndex("by_assigned_group", (q) => q.eq("assignedGroupId", groupId))
+      .collect();
+    const taken = inGroup.filter((x) => x.status === "approved" && x._id !== id).length;
+    if (taken >= group.capacity) throw new ConvexError(`Grupa „${group.name}" jest pełna (${taken}/${group.capacity}).`);
+    await ctx.db.patch("enrollments", id, { assignedGroupId: groupId });
+    return true;
+  },
+});
+
 // Admin: cofnięcie do "oczekuje" (zdjęcie przydziału grupy).
 export const unassign = mutation({
   args: { id: v.id("enrollments") },
@@ -338,6 +380,7 @@ export const unassign = mutation({
     await ctx.db.patch("enrollments", id, {
       status: "pending",
       assignedGroupId: undefined,
+      resignedAt: undefined, // także „przywrócenie" po rezygnacji
     });
   },
 });

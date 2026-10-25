@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { A, card, btnSecondary, btnGhost, pageTitle, pageDesc, MAIL_KIND, MAIL_STATUS } from "@/components/admin/ui";
 import { Icon } from "@/components/Icons";
+import Hint from "@/components/admin/Hint";
 
 // Rejestr maili ze skrzynki nadawczej: status każdego maila + ponawianie nieudanych.
 export default function Maile() {
@@ -22,6 +23,14 @@ export default function Maile() {
     <div style={{ maxWidth: 960 }}>
       <h1 className="font-fredoka" style={pageTitle}>Wiadomości e-mail</h1>
       <p style={pageDesc}>Każdy mail wysyłany przez stronę jest tu zapisany. Gdy Resend chwilowo odrzuci wysyłkę, system sam ponawia próbę. Nieudane możesz ponowić ręcznie.</p>
+
+      <Hint id="maile">
+        <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 5 }}>
+          <li><strong>W kolejce</strong> — mail czeka na wysyłkę (wychodzą po kolei, ok. 1 na sekundę). <strong>Wysłany</strong> — przyjęty przez serwer pocztowy.</li>
+          <li><strong>Nieudany</strong> — najczęściej literówka w adresie rodzica albo chwilowy błąd serwera. Kliknij „Ponów”; gdy znów się nie uda, zadzwoń do rodzica i potwierdź adres.</li>
+          <li>Status ostatniego maila widać też na karcie dziecka w zakładce Zgłoszenia.</li>
+        </ul>
+      </Hint>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 18 }}>
         {[

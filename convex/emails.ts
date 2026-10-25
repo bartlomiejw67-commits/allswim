@@ -128,6 +128,16 @@ export const tpl = {
     );
   },
 
+  // Do rodzica: potwierdzenie rezygnacji z zajęć (opcjonalne, zaznaczane przy publikacji).
+  participantResigned(a: { childName: string }): EmailContent {
+    return build(
+      "Potwierdzenie rezygnacji — ALL SWIM",
+      "Potwierdzamy rezygnację z zajęć",
+      `<p style="margin:0;font-size:15px;line-height:1.6">Potwierdzamy rezygnację z zajęć dla <strong>${a.childName}</strong>. Miejsce w grupie zostało zwolnione.</p>
+       <p style="margin:12px 0 0;font-size:15px;line-height:1.6">Dziękujemy za wspólny czas na basenie i zapraszamy ponownie przy kolejnym naborze.</p>`,
+    );
+  },
+
   // Do rodzica: zmiana grupy/godzin.
   participantScheduleChanged(a: { childName: string; groupName: string; poolName: string | null; times: string }): EmailContent {
     return build(

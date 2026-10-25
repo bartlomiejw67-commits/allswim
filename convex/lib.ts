@@ -53,7 +53,11 @@ export async function scheduleSignature(
     .sort(
       (a, b) => a.dayOfWeek - b.dayOfWeek || a.startTime.localeCompare(b.startTime),
     );
-  const hash = times.map((t) => `${t.dayOfWeek}|${t.startTime}|${t.endTime}`).join(",");
+  // Podpis obejmuje też basen — przeniesienie grupy na inny basen = „zmiana grafiku" (mail do rodziców).
+  const hash = entries
+    .map((e) => `${e.dayOfWeek}|${e.startTime}|${e.endTime}|${e.poolId}`)
+    .sort()
+    .join(",");
   return { times, hash };
 }
 

@@ -11,6 +11,7 @@ const enrollmentStatus = v.union(
   v.literal("approved"),
   v.literal("rejected"),
   v.literal("reserve"), // lista rezerwowa (brak miejsc)
+  v.literal("resigned"), // rezygnacja z zajęć (historia zostaje)
 );
 
 export default defineSchema({
@@ -90,6 +91,7 @@ export default defineSchema({
     // — cała grupa chodzi na jeden basen, brak wyboru basenu per dziecko.
     assignedGroupId: v.optional(v.id("groups")), // grupa (wybierana przy akceptacji)
     decisionNote: v.optional(v.string()), // opcjonalne uzasadnienie decyzji
+    resignedAt: v.optional(v.number()), // kiedy zapisano rezygnację
     // Snapshot ostatnio OPUBLIKOWANEGO stanu — to widzi rodzic i wg tego liczymy
     // różnice do wysyłki maili przy publikacji:
     publishedStatus: v.optional(enrollmentStatus),
@@ -117,6 +119,9 @@ export default defineSchema({
     override: v.optional(v.union(v.literal("cash"), v.literal("exempt"))), // gotówka / zwolniony
     note: v.optional(v.string()),
     reminderSentAt: v.optional(v.number()),
+    // Zamrożone po rozliczeniu miesiąca — późniejsze zmiany w składzie nie zmieniają minionych miesięcy.
+    expected: v.optional(v.number()), // należność w groszach
+    children: v.optional(v.array(v.string())),
   })
     .index("by_month", ["month"])
     .index("by_month_family", ["month", "family"]),

@@ -34,9 +34,8 @@ function expectedFor(n: number, c: Config): number {
 
 type Status = "paid" | "partial" | "unpaid" | "cash" | "exempt";
 
-// Wiersze miesiąca: rodziny z aktualnej listy przyjętych dzieci + rodziny, które mają zapis za ten miesiąc.
-async function buildMonth(ctx: QueryCtx, month: string) {
-  const cfg = await getConfig(ctx);
+// Aktualny skład: rodziny (e-mail rodzica) z dziećmi przyjętymi do grup.
+async function currentFamilies(ctx: QueryCtx) {
   const approved = await ctx.db.query("enrollments").withIndex("by_status", (q) => q.eq("status", "approved")).take(2000);
   const families = new Map<string, { email: string; children: string[] }>();
   for (const e of approved) {
@@ -46,23 +45,37 @@ async function buildMonth(ctx: QueryCtx, month: string) {
     if (!f.children.includes(e.name)) f.children.push(e.name);
     families.set(key, f);
   }
+  return families;
+}
+
+// Wiersze miesiąca. Po pierwszym rozliczeniu miesiąca dzieci i należność rodziny są zamrożone
+// (zapisane w paymentRecords), więc późniejsze rezygnacje/przeniesienia nie zmieniają minionych miesięcy.
+// Rodziny dopisane po rozliczeniu pojawiają się z należnością liczoną na bieżąco.
+async function buildMonth(ctx: QueryCtx, month: string) {
+  const cfg = await getConfig(ctx);
+  const live = await currentFamilies(ctx);
   const records = await ctx.db.query("paymentRecords").withIndex("by_month", (q) => q.eq("month", month)).take(2000);
   const recByFamily = new Map(records.map((r) => [r.family, r]));
-  for (const r of records) if (!families.has(r.family)) families.set(r.family, { email: r.family, children: [] });
+  const keys = new Set<string>([...live.keys(), ...records.map((r) => r.family)]);
 
-  const rows = [...families.entries()].map(([family, f]) => {
+  const rows = [...keys].map((family) => {
     const rec = recByFamily.get(family);
+    const now = live.get(family);
+    const frozen = rec?.expected !== undefined;
+    const children = frozen ? (rec!.children ?? []) : (now?.children ?? []);
+    const expected = frozen ? rec!.expected! : expectedFor(children.length, cfg);
     const transfers = rec?.transfers ?? [];
-    const paid = transfers.reduce((s, t) => s + t.amount, 0);
-    const expected = expectedFor(f.children.length, cfg);
+    const paid = transfers.reduce((sum, t) => sum + t.amount, 0);
     let status: Status = rec?.override === "cash" ? "cash" : rec?.override === "exempt" ? "exempt" : "unpaid";
     if (!rec?.override) status = paid <= 0 ? "unpaid" : expected > 0 && paid < expected ? "partial" : "paid";
     const lastDate = transfers.length ? [...transfers].sort((a, b) => b.date.localeCompare(a.date))[0].date : null;
     return {
       family,
-      email: f.email,
-      children: [...f.children].sort((a, b) => a.localeCompare(b, "pl")),
-      inRoster: f.children.length > 0,
+      email: now?.email ?? family,
+      children: [...children].sort((a, b) => a.localeCompare(b, "pl")),
+      inRoster: children.length > 0,
+      // Zmiana w składzie po zamrożeniu (np. rezygnacja) — informacyjnie w panelu.
+      changedSince: frozen ? (now ? now.children.slice().sort().join("|") !== (rec!.children ?? []).slice().sort().join("|") : true) : false,
       expected,
       paid,
       transfers,
@@ -158,6 +171,16 @@ export const importMonth = internalMutation({
     entries: v.array(v.object({ family: v.string(), transfers: v.array(v.object({ date: v.string(), amount: v.number() })) })),
   },
   handler: async (ctx, { month, coveredUntil, entries }) => {
+    // Zamrożenie składu i należności (tylko tam, gdzie jeszcze nie zamrożono).
+    const cfg = await getConfig(ctx);
+    const live = await currentFamilies(ctx);
+    for (const [family, f] of live) {
+      const rec = await ctx.db.query("paymentRecords").withIndex("by_month_family", (q) => q.eq("month", month).eq("family", family)).unique();
+      const snap = { expected: expectedFor(f.children.length, cfg), children: f.children };
+      if (!rec) await ctx.db.insert("paymentRecords", { month, family, transfers: [], ...snap });
+      else if (rec.expected === undefined) await ctx.db.patch("paymentRecords", rec._id, snap);
+    }
+
     let added = 0;
     for (const e of entries) {
       const family = norm(e.family);

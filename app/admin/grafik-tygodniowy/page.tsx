@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { A, card, input, label, btnPrimary, btnDanger, btnSecondary, btnGhost, pageTitle, pageDesc } from "@/components/admin/ui";
 import { Icon } from "@/components/Icons";
+import Hint from "@/components/admin/Hint";
 
 const DAYS = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"];
 
@@ -43,6 +44,15 @@ export default function Page() {
         Niżej, w siatce każdego basenu, dodawaj <strong>terminy zajęć</strong> grup. Zmiany wejdą w życie i powiadomią
         rodziców dopiero po kliknięciu <strong>„Opublikuj zmiany”</strong> (u góry panelu).
       </p>
+
+      <Hint id="grafik">
+        <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 5 }}>
+          <li><strong>Zmiana godzin lub basenu</strong> grupy: popraw termin w siatce. Po publikacji wszyscy rodzice z tej grupy dostaną mail „Zmiana grafiku” z nowymi godzinami i basenem.</li>
+          <li><strong>Przeniesienie dziecka</strong> do innej grupy albo <strong>rezygnację</strong> rób w zakładce <strong>Zgłoszenia</strong> (przyciski „Przenieś” i „Rezygnacja”).</li>
+          <li><strong>×</strong> przy dziecku cofa je do oczekujących — rodzic dostanie mail o wycofaniu przydziału, więc nie używaj go przy rezygnacjach.</li>
+          <li>Grupy i baseny z przypisanymi dziećmi lub terminami nie dadzą się usunąć — najpierw przenieś dzieci.</li>
+        </ul>
+      </Hint>
 
       {/* Widoczność grafiku */}
       <div style={{ ...card, marginBottom: 22, display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center", justifyContent: "space-between", background: live ? "#e8f7ee" : "#fff3da", border: live ? "1px solid #b7e4c7" : "1px solid #f0dca6" }}>
@@ -122,7 +132,7 @@ function GroupCard({ group }: { group: Group }) {
                 {m.name}{m.childAge ? <span style={{ color: A.grey }}> · {m.childAge} l.</span> : null}
               </span>
               <button title="Cofnij do oczekujących" disabled={busy === m.enrollmentId} onClick={async () => {
-                if (!confirm(`Cofnąć „${m.name}” do oczekujących? Zniknie z tej grupy.`)) return;
+                if (!confirm(`Cofnąć „${m.name}” do oczekujących? Zniknie z tej grupy.\n\nUwaga: po publikacji rodzic dostanie mail, że przydział został wycofany.\n• Dziecko kończy zajęcia? Użyj „Rezygnacja” w zakładce Zgłoszenia.\n• Zmiana grupy? Użyj „Przenieś” w zakładce Zgłoszenia.`)) return;
                 setBusy(m.enrollmentId);
                 try { await unassign({ id: m.enrollmentId as Id<"enrollments"> }); }
                 finally { setBusy(null); }

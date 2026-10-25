@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { A, card, input, label, btnPrimary, btnAccent, btnGhost, btnSecondary, pageTitle, pageDesc } from "@/components/admin/ui";
 import { Icon } from "@/components/Icons";
+import Hint from "@/components/admin/Hint";
 
 // Płatności miesięczne rodzin: status TAK/NIE, data i kwota wpłaty (bez numerów kont),
 // eksport do Excela i przypomnienia z potwierdzeniem.
@@ -107,6 +108,15 @@ export default function Platnosci() {
       <h1 className="font-fredoka" style={pageTitle}>Płatności</h1>
       <p style={pageDesc}>Kto zapłacił za wybrany miesiąc: status, data przelewu i kwota. Dane pochodzą z rozliczonego wyciągu bankowego (bez numerów kont i tytułów przelewów). Przypomnienia wysyłasz sam — po zaznaczeniu i potwierdzeniu.</p>
 
+      <Hint id="platnosci">
+        <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 5 }}>
+          <li><strong>Skąd dane:</strong> wyciąg z banku jest rozliczany poza stroną, tutaj trafia tylko data i kwota wpłaty każdej rodziny.</li>
+          <li><strong>Kolory:</strong> zielony — opłacone, żółty — wpłata niepełna, czerwony — brak wpłaty. Gotówkę albo zwolnienie z opłaty ustawisz ręcznie przy rodzinie.</li>
+          <li><strong>Przypomnienia:</strong> zaznacz rodziny bez wpłaty i kliknij wysyłkę — przed wysłaniem zobaczysz listę do potwierdzenia. Działa dopiero po rozliczeniu wyciągu za ten miesiąc.</li>
+          <li><strong>Rozliczony miesiąc jest zamrożony:</strong> późniejsze rezygnacje i przeniesienia nie zmieniają jego kwot. Etykieta „zmiana w składzie” oznacza, że od rozliczenia coś się u tej rodziny zmieniło.</li>
+        </ul>
+      </Hint>
+
       {/* Wybór miesiąca */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
         <button style={{ ...btnGhost, padding: "9px 11px" }} onClick={() => changeMonth(shift(month, -1))} aria-label="Poprzedni miesiąc"><Icon name="chevronLeft" size={17} stroke={2.2} /></button>
@@ -183,7 +193,7 @@ export default function Platnosci() {
                 </span>
                 <div className="pay-main" style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 15, color: A.navyDeep }}>{r.children.length ? r.children.join(", ") : "(poza grupami)"}</div>
-                  <div style={{ fontSize: 13, color: A.grey, overflowWrap: "anywhere" }}>{r.email}{r.children.length > 1 ? ` · ${r.children.length} dzieci` : ""}</div>
+                  <div style={{ fontSize: 13, color: A.grey, overflowWrap: "anywhere" }}>{r.email}{r.children.length > 1 ? ` · ${r.children.length} dzieci` : ""}{r.changedSince && <span title="Od rozliczenia tego miesiąca zmienił się skład (np. rezygnacja lub nowe dziecko). Kwota tego miesiąca się nie zmienia." style={{ marginLeft: 6, fontSize: 11.5, fontWeight: 700, color: "#5b6b77", background: "#eceff2", borderRadius: 999, padding: "1px 8px" }}>zmiana w składzie</span>}</div>
                   {r.reminderSentAt && <div style={{ fontSize: 12.5, color: "#8a5c00", marginTop: 2 }}>Przypomnienie wysłane {new Date(r.reminderSentAt).toLocaleDateString("pl-PL")}</div>}
                   {r.note && <div style={{ fontSize: 12.5, color: A.grey, marginTop: 2 }}>{r.note}</div>}
                 </div>

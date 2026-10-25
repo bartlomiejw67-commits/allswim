@@ -16,6 +16,7 @@ const STATUS: Record<string, { label: string; color: string; bg: string; step: n
   reserve: { label: "Lista rezerwowa", color: "#6b4bbd", bg: "#efeafc", step: 2, icon: "clock", info: "Na ten moment grupy są pełne. Jesteście na liście rezerwowej — odezwiemy się jako pierwsi, gdy zwolni się miejsce." },
   approved: { label: "Przyjęte", color: "#1f7a52", bg: "#e5f5ec", step: 3, icon: "check", info: "" },
   rejected: { label: "Nieprzyjęte", color: "#b4232a", bg: "#fdecec", step: 2, icon: "info", info: "Niestety nie możemy obecnie przyjąć zgłoszenia. Zapraszamy przy kolejnym naborze." },
+  resigned: { label: "Zajęcia zakończone", color: "#5f7380", bg: "#eef2f5", step: 0, icon: "info", info: "Rezygnacja z zajęć została przyjęta, a miejsce w grupie zwolnione. Dziękujemy za wspólne pływanie!" },
 };
 
 export const kontoCard: React.CSSProperties = {
@@ -64,6 +65,7 @@ export function KontoView({ email, firstName, enrollments, schedule: rawSchedule
 
   const schedule = rawSchedule ? [...rawSchedule].sort((a, b) => a.dayOfWeek - b.dayOfWeek || a.startTime.localeCompare(b.startTime)) : [];
   const children = enrollments ?? [];
+  const activeKids = children.filter((e) => e.status !== "resigned").length; // bez dzieci po rezygnacji
 
   // Najbliższe zajęcia: pierwszy termin po „teraz" w tym tygodniu, a jak brak — pierwszy w następnym.
   let next: KontoSession | null = null;
@@ -100,7 +102,7 @@ export function KontoView({ email, firstName, enrollments, schedule: rawSchedule
             <div style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", overflowWrap: "anywhere" }}>Zalogowano jako {email}</div>
             <h1 className="font-fredoka" style={{ fontSize: "clamp(26px,4vw,34px)", margin: "4px 0 0", fontWeight: 600 }}>Cześć{firstName ? `, ${firstName}` : ""}!</h1>
             <div className="konto-stats" style={{ marginTop: 18 }}>
-              <Stat icon="users" value={String(children.length)} label={children.length === 1 ? "dziecko" : "dzieci"} />
+              <Stat icon="users" value={String(activeKids)} label={activeKids === 1 ? "dziecko" : "dzieci"} />
               <Stat icon="calendar" value={String(schedule.length)} label="zajęć w tygodniu" />
               <Stat icon="clock" value={next ? `${nextLabel}, ${next.startTime}` : "—"} label={next ? `najbliższe · ${next.children.join(", ")}` : "najbliższe zajęcia"} wide />
             </div>
@@ -139,7 +141,7 @@ export function KontoView({ email, firstName, enrollments, schedule: rawSchedule
                       </div>
                     </div>
 
-                    <Steps step={e.status === "approved" && e.assignedGroupName ? 3 : e.status === "approved" ? 2 : st.step} failed={e.status === "rejected"} />
+                    {e.status !== "resigned" && <Steps step={e.status === "approved" && e.assignedGroupName ? 3 : e.status === "approved" ? 2 : st.step} failed={e.status === "rejected"} />}
 
                     {e.status === "approved" && e.assignedGroupName ? (
                       <div style={{ marginTop: 14, background: "#f3f8fc", border: `1px solid ${C.line}`, borderRadius: 14, padding: "12px 14px" }}>

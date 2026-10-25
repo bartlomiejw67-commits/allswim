@@ -88,6 +88,8 @@ export const MAIL_KIND: Record<string, string> = {
   scheduleChanged: "Zmiana grafiku",
   removed: "Wycofanie przydziału",
   waitlistOpened: "Nabór otwarty",
+  resigned: "Potwierdzenie rezygnacji",
+  paymentReminder: "Przypomnienie o płatności",
 };
 
 export const MAIL_STATUS: Record<string, { label: string; color: string; bg: string }> = {
