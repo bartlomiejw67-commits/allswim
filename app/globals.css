@@ -623,6 +623,22 @@ textarea.as-form2-input { resize: vertical; min-height: 96px; line-height: 1.5; 
   .as-foot-wide { grid-column: 1 / -1; }
 }
 
+/* ===== Konto rodzica ===== */
+.konto-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.konto-kids { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 14px; }
+.konto-day { display: grid; grid-template-columns: 170px 1fr; gap: 14px; padding: 16px 22px; }
+.konto-day:first-child { border-top: none !important; }
+.konto-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) {
+  .konto-stats { grid-template-columns: 1fr 1fr; }
+  .konto-kids { grid-template-columns: 1fr; }
+  .konto-day { grid-template-columns: 1fr; gap: 8px; padding: 14px 16px; }
+  .konto-foot { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .konto-hide-sm { display: none !important; }
+}
+
 /* Wielki CTA przed stopką */
 .as-cta-big { font-size: clamp(36px, 6.4vw, 84px); line-height: 0.98; letter-spacing: -0.02em; }
 @keyframes as-blob1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(5vw,3vh) scale(1.14); } }

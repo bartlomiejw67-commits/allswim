@@ -49,17 +49,24 @@ export const mySchedule = query({
     const active = mine.filter(
       (e) => e.publishedStatus === "approved" && e.publishedGroupId,
     );
-    const rows: Awaited<ReturnType<typeof toDisplay>>[] = [];
+    // Każdy termin z imieniem dziecka. Rodzeństwo w tej samej grupie = jeden termin
+    // z kilkoma imionami (bez dublowania wierszy).
+    const byEntry = new Map<string, Awaited<ReturnType<typeof toDisplay>> & { children: string[] }>();
     for (const e of active) {
       const entries = await ctx.db
         .query("scheduleEntries")
         .withIndex("by_group", (q) => q.eq("groupId", e.publishedGroupId!))
         .collect();
       for (const entry of entries) {
-        rows.push(await toDisplay(ctx, entry));
+        const existing = byEntry.get(entry._id);
+        if (existing) {
+          if (!existing.children.includes(e.name)) existing.children.push(e.name);
+        } else {
+          byEntry.set(entry._id, { ...(await toDisplay(ctx, entry)), children: [e.name] });
+        }
       }
     }
-    return rows;
+    return [...byEntry.values()];
   },
 });
 

@@ -64,7 +64,7 @@ export const submit = mutation({
     }
 
     const name = args.name.trim();
-    const email = args.email.trim();
+    const email = args.email.trim().toLowerCase(); // jednolicie małymi literami (łatwiejsze dopasowanie do konta)
     if (!name) throw new ConvexError("Podaj imię i nazwisko dziecka.");
     if (!EMAIL_RE.test(email)) throw new ConvexError("Podaj poprawny adres e-mail.");
 
@@ -168,17 +168,12 @@ export const linkMine = mutation({
   handler: async (ctx) => {
     const user = await getCurrentUser(ctx);
     if (!user || !user.email) return 0;
-    const email = user.email.toLowerCase();
-    const matches = await ctx.db
-      .query("enrollments")
-      .withIndex("by_email", (q) => q.eq("email", user.email!))
-      .take(100);
-    // dodatkowo dopasuj po wersji lowercase (gdyby różniła się wielkość liter)
-    const all = matches.length
-      ? matches
-      : (await ctx.db.query("enrollments").take(1000)).filter(
-          (e) => e.email.toLowerCase() === email,
-        );
+    const email = user.email.trim().toLowerCase();
+    // Zawsze porównujemy bez względu na wielkość liter i spacje — rodzic mógł wpisać
+    // e-mail inaczej przy każdym dziecku (np. „Kowalska@…" przy drugim zgłoszeniu).
+    const all = (await ctx.db.query("enrollments").take(3000)).filter(
+      (e) => e.email.trim().toLowerCase() === email,
+    );
     let linked = 0;
     for (const e of all) {
       if (!e.userId) {

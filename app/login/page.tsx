@@ -23,7 +23,13 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      await signIn("password", { email: email.trim(), password, flow });
+      const login = email.trim().toLowerCase();
+      await signIn("password", { email: login, password, flow });
+      // Poproś przeglądarkę o zapisanie hasła (Chrome/Edge/Android; Safari zapisuje po swojemu z formularza).
+      try {
+        const PC = (window as unknown as { PasswordCredential?: new (d: { id: string; password: string }) => Credential }).PasswordCredential;
+        if (PC && navigator.credentials?.store) await navigator.credentials.store(new PC({ id: login, password }));
+      } catch { /* brak wsparcia — przeglądarka i tak może zaproponować zapis z formularza */ }
       try { await linkMine({}); } catch { /* połączenie zgłoszeń best-effort */ }
       router.push("/konto");
     } catch (err) {
@@ -49,18 +55,23 @@ export default function LoginPage() {
         <h1 className="font-fredoka" style={{ textAlign: "center", margin: "0 0 4px", fontSize: 26, fontWeight: 700, color: "#0f5b8f" }}>
           {flow === "signIn" ? "Logowanie" : "Załóż konto"}
         </h1>
-        <p style={{ textAlign: "center", color: "#5a6b75", fontSize: 14, margin: "0 0 24px" }}>Panel ALL SWIM</p>
+        <p style={{ textAlign: "center", color: "#5a6b75", fontSize: 14.5, margin: "0 0 22px", lineHeight: 1.5 }}>
+          {flow === "signIn" ? "Status zgłoszenia, grupa i plan zajęć dziecka." : "Użyj tego samego e-maila, który podano w zgłoszeniu dziecka — wtedy zgłoszenie pojawi się na koncie."}
+        </p>
 
-        <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <form onSubmit={submit} autoComplete="on" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
-            <label style={{ display: "block", fontWeight: 800, fontSize: 13, color: "#1b3a4b", marginBottom: 6 }}>E-mail</label>
-            <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="as-input" style={inputStyle} placeholder="twoj@email.pl" />
+            <label htmlFor="login-email" style={labelStyle}>E-mail</label>
+            <input id="login-email" name="email" type="email" required autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={email} onChange={(e) => setEmail(e.target.value)} className="as-input" style={inputStyle} placeholder="twoj@email.pl" />
           </div>
           <div>
-            <label style={{ display: "block", fontWeight: 800, fontSize: 13, color: "#1b3a4b", marginBottom: 6 }}>Hasło</label>
+            <label htmlFor="login-password" style={labelStyle}>Hasło{flow === "signUp" && <span style={{ fontWeight: 400, color: "#8a9aa5" }}> — min. 8 znaków</span>}</label>
             <div style={{ position: "relative" }}>
               <input
+                id="login-password"
+                name="password"
                 type={showPassword ? "text" : "password"}
+                minLength={flow === "signUp" ? 8 : undefined}
                 required
                 autoComplete={flow === "signUp" ? "new-password" : "current-password"}
                 value={password}
@@ -92,16 +103,16 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {error && <div style={{ fontSize: 13, fontWeight: 700, color: "#b4232a", background: "#fdeaea", borderRadius: 12, padding: "10px 12px" }}>{error}</div>}
+          {error && <div style={{ fontSize: 14, fontWeight: 500, color: "#b4232a", background: "#fdeeee", border: "1px solid #f6d3d3", borderRadius: 12, padding: "10px 12px" }}>{error}</div>}
 
-          <button type="submit" disabled={loading} className="font-fredoka" style={{ marginTop: 4, fontWeight: 600, fontSize: 16, color: "#fff", background: loading ? "#caa46a" : "#e9a13b", border: "none", borderRadius: 999, padding: "14px 24px", cursor: loading ? "default" : "pointer", boxShadow: "0 10px 24px rgba(233,161,59,0.35)" }}>
+          <button type="submit" disabled={loading} className="font-fredoka" style={{ marginTop: 4, fontWeight: 600, fontSize: 16, color: "#fff", background: loading ? "#d9c3a0" : "#e9a13b", border: "none", borderRadius: 14, padding: "14px 24px", cursor: loading ? "default" : "pointer", boxShadow: "0 10px 24px rgba(233,161,59,0.3)" }}>
             {loading ? "Chwila…" : flow === "signIn" ? "Zaloguj się" : "Utwórz konto"}
           </button>
         </form>
 
         <div style={{ textAlign: "center", marginTop: 18, fontSize: 14, color: "#5a6b75" }}>
           {flow === "signIn" ? "Nie masz konta? " : "Masz już konto? "}
-          <button onClick={() => { setError(null); setFlow(flow === "signIn" ? "signUp" : "signIn"); }} style={{ background: "none", border: "none", color: "#0f5b8f", fontWeight: 800, cursor: "pointer", textDecoration: "underline", fontSize: 14 }}>
+          <button onClick={() => { setError(null); setFlow(flow === "signIn" ? "signUp" : "signIn"); }} style={{ background: "none", border: "none", color: "#0f5b8f", fontWeight: 700, cursor: "pointer", textDecoration: "underline", fontSize: 14, fontFamily: "inherit" }}>
             {flow === "signIn" ? "Zarejestruj się" : "Zaloguj się"}
           </button>
         </div>
@@ -116,10 +127,12 @@ export default function LoginPage() {
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  fontSize: 15,
-  padding: "12px 14px",
-  borderRadius: 14,
-  border: "2px solid #e3eef5",
-  background: "#f8fcff",
+  fontSize: 16,
+  padding: "13px 14px",
+  borderRadius: 12,
+  border: "1.5px solid #d6e2ea",
+  background: "#fff",
   color: "#1b3a4b",
 };
+
+const labelStyle: React.CSSProperties = { display: "block", fontWeight: 600, fontSize: 14, color: "#3e5361", marginBottom: 6 };

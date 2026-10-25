@@ -1182,7 +1182,7 @@ export default function Home() {
                 <div className="as-form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                   <div>
                     <label className="as-form2-label" htmlFor="f-email">E-mail rodzica</label>
-                    <input id="f-email" type="email" value={fEmail} onChange={(e) => setFEmail(e.target.value)} placeholder="np. rodzic@email.pl" className="as-form2-input" autoComplete="email" />
+                    <input id="f-email" type="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={fEmail} onChange={(e) => setFEmail(e.target.value)} placeholder="np. rodzic@email.pl" className="as-form2-input" autoComplete="email" />
                   </div>
                   <div>
                     <label className="as-form2-label" htmlFor="f-phone">Telefon</label>
