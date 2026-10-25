@@ -108,6 +108,26 @@ export default defineSchema({
     notified: v.optional(v.boolean()), // czy admin już powiadomił o otwarciu naboru
   }).index("by_email", ["email"]),
 
+  // Płatności miesięczne rodzin (rodzina = e-mail rodzica, małe litery). Bez numerów kont i tytułów
+  // przelewów — tylko data i kwota (w groszach) przypisane do rodziny po rozliczeniu wyciągu.
+  paymentRecords: defineTable({
+    month: v.string(), // "2026-11"
+    family: v.string(),
+    transfers: v.array(v.object({ date: v.string(), amount: v.number() })), // date "2026-11-09", amount w groszach
+    override: v.optional(v.union(v.literal("cash"), v.literal("exempt"))), // gotówka / zwolniony
+    note: v.optional(v.string()),
+    reminderSentAt: v.optional(v.number()),
+  })
+    .index("by_month", ["month"])
+    .index("by_month_family", ["month", "family"]),
+
+  // Rejestr rozliczeń wyciągów (do jakiego dnia są dane za dany miesiąc).
+  paymentImports: defineTable({
+    month: v.string(),
+    coveredUntil: v.string(), // ostatni dzień objęty wyciągiem, "2026-11-11"
+    transfersCount: v.number(),
+  }).index("by_month", ["month"]),
+
   // Skrzynka nadawcza: każdy mail zapisany przed wysyłką (rejestr + ponawianie przy błędach Resend).
   emailOutbox: defineTable({
     to: v.string(),
@@ -215,6 +235,9 @@ export default defineSchema({
     paymentAccount: v.optional(v.string()), // numer konta
     paymentDeadline: v.optional(v.string()), // np. "do 10. dnia każdego miesiąca"
     paymentNote: v.optional(v.string()),
+    payBase: v.optional(v.number()), // należność za jedno dziecko (zł/mies.)
+    paySibling: v.optional(v.number()), // za każde z dwójki rodzeństwa
+    payThird: v.optional(v.number()), // za trzecie i kolejne dziecko
     galleryEyebrow: v.optional(v.string()),
     galleryTitle: v.optional(v.string()),
     regulationsEyebrow: v.optional(v.string()),

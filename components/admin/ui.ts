@@ -100,6 +100,7 @@ export const MAIL_STATUS: Record<string, { label: string; color: string; bg: str
 export const ADMIN_NAV: { href: string; label: string; icon: IconName; group: string }[] = [
   { href: "/admin", label: "Zgłoszenia naboru", icon: "inbox", group: "Na bieżąco" },
   { href: "/admin/grafik-tygodniowy", label: "Grafik", icon: "calendar", group: "Na bieżąco" },
+  { href: "/admin/platnosci", label: "Płatności", icon: "wallet", group: "Na bieżąco" },
   { href: "/admin/maile", label: "Wiadomości e-mail", icon: "mail", group: "Na bieżąco" },
   { href: "/admin/poziomy", label: "Poziomy i grupy", icon: "layers", group: "Zajęcia" },
   { href: "/admin/baseny", label: "Baseny", icon: "waves", group: "Zajęcia" },

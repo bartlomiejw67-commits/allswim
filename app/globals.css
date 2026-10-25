@@ -623,6 +623,19 @@ textarea.as-form2-input { resize: vertical; min-height: 96px; line-height: 1.5; 
   .as-foot-wide { grid-column: 1 / -1; }
 }
 
+/* ===== Panel: płatności ===== */
+.pay-row { display: grid; grid-template-columns: 26px minmax(0, 1.7fr) 0.8fr 1.1fr 0.9fr 150px; gap: 12px; align-items: center; padding: 12px 16px; }
+.pay-head { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #7d8f9b; background: #f6f9fb; }
+.pay-lbl { display: none; }
+@media (max-width: 860px) {
+  .pay-row { grid-template-columns: 26px 1fr 1fr; row-gap: 8px; }
+  .pay-row > .pay-main { grid-column: 2 / -1; }
+  .pay-row > .pay-cell { grid-column: span 1; }
+  .pay-row > .pay-act { grid-column: 2 / -1; }
+  .pay-head { display: none; }
+  .pay-lbl { display: block; font-size: 11.5px; font-weight: 700; color: #8a9aa5; text-transform: uppercase; letter-spacing: 0.04em; }
+}
+
 /* ===== Konto rodzica ===== */
 .konto-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .konto-kids { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 14px; }

@@ -19,6 +19,7 @@ import type * as instructors from "../instructors.js";
 import type * as levels from "../levels.js";
 import type * as lib from "../lib.js";
 import type * as outbox from "../outbox.js";
+import type * as payments from "../payments.js";
 import type * as pools from "../pools.js";
 import type * as prices from "../prices.js";
 import type * as publish from "../publish.js";
@@ -47,6 +48,7 @@ declare const fullApi: ApiFromModules<{
   levels: typeof levels;
   lib: typeof lib;
   outbox: typeof outbox;
+  payments: typeof payments;
   pools: typeof pools;
   prices: typeof prices;
   publish: typeof publish;

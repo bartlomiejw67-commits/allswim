@@ -142,6 +142,23 @@ export const tpl = {
     );
   },
 
+  // Do rodzica: przypomnienie o płatności za miesiąc (wysyłane tylko po potwierdzeniu admina).
+  paymentReminder(a: { children: string; monthLabel: string; amount: string; account: string | null; deadline: string | null }): EmailContent {
+    return build(
+      `Przypomnienie o płatności za ${a.monthLabel} — ALL SWIM`,
+      "Przypomnienie o płatności",
+      `<p style="margin:0;font-size:15px;line-height:1.6">Dzień dobry,</p>
+       <p style="margin:12px 0 0;font-size:15px;line-height:1.6">uprzejmie przypominamy o opłacie za zajęcia <strong>${a.children}</strong> za <strong>${a.monthLabel}</strong>. Nie odnotowaliśmy jeszcze wpłaty na naszym koncie.</p>
+       <div style="background:#e8f4fb;border-radius:12px;padding:14px 16px;font-size:15px;line-height:1.7;margin-top:14px">
+         Kwota: <strong>${a.amount}</strong><br/>
+         ${a.account ? `Numer konta: <strong>${a.account}</strong><br/>` : ""}
+         Tytuł przelewu: <strong>imię i nazwisko dziecka oraz miesiąc</strong>
+         ${a.deadline ? `<br/>Termin: ${a.deadline}` : ""}
+       </div>
+       <p style="margin:14px 0 0;font-size:14px;line-height:1.6;color:#5a6b75">Jeśli płatność została już wysłana — dziękujemy i prosimy potraktować tę wiadomość jako nieaktualną. W razie pytań wystarczy odpowiedzieć na tego maila.</p>`,
+    );
+  },
+
   // Do osoby z listy powiadomień: nabór otwarty.
   waitlistOpened(): EmailContent {
     const site = process.env.SITE_URL;

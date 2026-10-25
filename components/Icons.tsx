@@ -11,7 +11,7 @@ export type IconName =
   | "users" | "lifebuoy" | "sun" | "droplet" | "waves" | "user"
   | "sparkle" | "star" | "info" | "heart" | "shield" | "whistle"
   | "inbox" | "gear" | "layers" | "image" | "fileText" | "externalLink" | "logOut"
-  | "plus" | "undo" | "cake" | "message" | "trash" | "send" | "alert" | "pencil";
+  | "plus" | "undo" | "cake" | "message" | "trash" | "send" | "alert" | "pencil" | "wallet";
 
 // Ikony wypełniane (fill) — reszta jest konturowa (stroke).
 const FILLED = new Set<IconName>(["play", "star", "sparkle", "heart", "facebook"]);
@@ -108,6 +108,8 @@ function paths(name: IconName): React.ReactNode {
       return <><path d="M4.5 7h15" /><path d="M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2" /><path d="M6.5 7l.8 11.6a2 2 0 0 0 2 1.9h5.4a2 2 0 0 0 2-1.9L17.5 7" /></>;
     case "send":
       return <><path d="M20.5 3.5L10 14" /><path d="M20.5 3.5l-6.6 17-3.9-6.5-6.5-3.9z" /></>;
+    case "wallet":
+      return <><path d="M5 7.5l10.5-3 1 3" /><rect x="3.5" y="7.5" width="17" height="12" rx="2.5" /><path d="M20.5 11.5h-4a2 2 0 0 0 0 4h4" /></>;
     case "pencil":
       return <><path d="M15.5 4.5l4 4L9 19H5v-4z" /><path d="M13 7l4 4" /></>;
     case "alert":
