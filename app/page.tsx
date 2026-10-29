@@ -426,6 +426,16 @@ export default function Home() {
       : rotateWindow(campPhotoItems, campsOffset, 6)
     : flagship;
 
+  // Animacje hero tylko, gdy hero jest widoczne.
+  const heroRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([e]) => el.classList.toggle("as-hero-paused", !e.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   // Automatyczna rotacja galerii zajęć (co ~9s, powolne przenikanie, gdy >6 zdjęć).
   const galleryCount = galleryItems.length;
   useEffect(() => {
@@ -455,7 +465,7 @@ export default function Home() {
 
       {/* ============ NAV ============ */}
       <header style={{ position: "sticky", top: 0, zIndex: 50, padding: "12px 14px 0", marginBottom: -84, pointerEvents: "none" }}>
-        <nav className="as-glass" style={{ pointerEvents: "auto", maxWidth: 1200, margin: "0 auto", padding: "9px 10px 9px 20px", borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, background: "rgba(255,255,255,0.78)" }}>
+        <nav className="as-glass as-glass-nav" style={{ pointerEvents: "auto", maxWidth: 1200, margin: "0 auto", padding: "9px 10px 9px 20px", borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, background: "rgba(255,255,255,0.78)" }}>
           <a href="#top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="ALL SWIM" style={{ height: 40, width: "auto", display: "block" }} />
@@ -508,7 +518,7 @@ export default function Home() {
       <div id="top" />
 
       {/* ============ HERO ============ */}
-      <section className="as-mask-wave-bottom" style={{ position: "relative", background: "radial-gradient(120% 80% at 85% -10%, #8fd3f6 0%, rgba(143,211,246,0) 55%), linear-gradient(165deg, #45a6df 0%, #1c72b1 42%, #0b4677 100%)", color: "#fff", overflow: "hidden" }}>
+      <section ref={heroRef} className="as-mask-wave-bottom" style={{ position: "relative", background: "radial-gradient(120% 80% at 85% -10%, #8fd3f6 0%, rgba(143,211,246,0) 55%), linear-gradient(165deg, #45a6df 0%, #1c72b1 42%, #0b4677 100%)", color: "#fff", overflow: "hidden" }}>
         {/* Promienie światła pod wodą (god rays) */}
         <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
           {[
@@ -517,11 +527,11 @@ export default function Home() {
             { left: "52%", w: 170, rot: 14, d: "13s", del: "0.8s" },
             { left: "74%", w: 110, rot: 22, d: "10s", del: "2.4s" },
           ].map((r, i) => (
-            <div key={i} style={{ position: "absolute", top: "-20%", left: r.left, width: r.w, height: "150%", background: "linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0) 72%)", ...({ "--r": `${r.rot}deg` } as React.CSSProperties), transform: `rotate(${r.rot}deg)`, transformOrigin: "top center", filter: "blur(8px)", animation: `as-ray ${r.d} ease-in-out infinite`, animationDelay: r.del }} />
+            <div key={i} style={{ position: "absolute", top: "-20%", left: r.left, width: r.w, height: "150%", background: "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%)", WebkitMaskImage: "linear-gradient(180deg, #000 0%, rgba(0,0,0,0.6) 40%, transparent 78%)", maskImage: "linear-gradient(180deg, #000 0%, rgba(0,0,0,0.6) 40%, transparent 78%)", ...({ "--r": `${r.rot}deg` } as React.CSSProperties), transform: `rotate(${r.rot}deg)`, transformOrigin: "top center", willChange: "transform, opacity", animation: `as-ray ${r.d} ease-in-out infinite`, animationDelay: r.del }} />
           ))}
           {/* migotanie światła (caustics) */}
-          <div style={{ position: "absolute", inset: "-10%", background: "radial-gradient(ellipse 30% 22% at 22% 30%, rgba(255,255,255,0.32), transparent 70%), radial-gradient(ellipse 26% 18% at 68% 62%, rgba(255,255,255,0.24), transparent 70%), radial-gradient(ellipse 22% 16% at 42% 84%, rgba(255,255,255,0.2), transparent 70%)", mixBlendMode: "soft-light", animation: "as-caustic 9s ease-in-out infinite" }} />
-          <div style={{ position: "absolute", inset: "-10%", background: "radial-gradient(ellipse 24% 18% at 78% 24%, rgba(255,255,255,0.28), transparent 70%), radial-gradient(ellipse 30% 20% at 30% 70%, rgba(255,255,255,0.18), transparent 70%)", mixBlendMode: "soft-light", animation: "as-caustic2 12s ease-in-out infinite" }} />
+          <div style={{ position: "absolute", inset: "-10%", background: "radial-gradient(ellipse 30% 22% at 22% 30%, rgba(255,255,255,0.32), transparent 70%), radial-gradient(ellipse 26% 18% at 68% 62%, rgba(255,255,255,0.24), transparent 70%), radial-gradient(ellipse 22% 16% at 42% 84%, rgba(255,255,255,0.2), transparent 70%)", opacity: 0.5, willChange: "transform, opacity", animation: "as-caustic 9s ease-in-out infinite" }} />
+          <div style={{ position: "absolute", inset: "-10%", background: "radial-gradient(ellipse 24% 18% at 78% 24%, rgba(255,255,255,0.28), transparent 70%), radial-gradient(ellipse 30% 20% at 30% 70%, rgba(255,255,255,0.18), transparent 70%)", opacity: 0.5, willChange: "transform, opacity", animation: "as-caustic2 12s ease-in-out infinite" }} />
           {BUBBLES.map((b, i) => (
             <div key={i} style={{ position: "absolute", left: b.left, bottom: 0, width: b.size, height: b.size, borderRadius: "50%", background: b.color, animation: `asrise ${b.dur} ease-in infinite`, animationDelay: b.delay }} />
           ))}
@@ -529,7 +539,7 @@ export default function Home() {
 
         <div className="as-hero-grid as-hero-pad" style={{ position: "relative", zIndex: 2, maxWidth: 1200, margin: "0 auto", display: "grid" }}>
           <div className="as-hero-top">
-            <div className="font-fredoka" style={{ display: "inline-flex", alignItems: "center", gap: 10, fontWeight: 700, fontSize: 13.5, letterSpacing: "0.12em", textTransform: "uppercase", color: "#fff", background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.32)", backdropFilter: "blur(10px)", borderRadius: 999, padding: "9px 18px 9px 14px" }}>
+            <div className="font-fredoka" style={{ display: "inline-flex", alignItems: "center", gap: 10, fontWeight: 700, fontSize: 13.5, letterSpacing: "0.12em", textTransform: "uppercase", color: "#fff", background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.32)", borderRadius: 999, padding: "9px 18px 9px 14px" }}>
               <span style={{ position: "relative", width: 10, height: 10, borderRadius: "50%", background: naborActive ? "#7ef0b5" : "#ffd27a", boxShadow: `0 0 0 5px ${naborActive ? "rgba(126,240,181,0.25)" : "rgba(255,210,122,0.25)"}`, display: "inline-block" }} />
               {naborActive ? "Trwa nabór · " + heroEyebrow : heroEyebrow}
             </div>
@@ -560,7 +570,7 @@ export default function Home() {
                 { icon: "users" as IconName, value: heroStat1Value, label: heroStat1Label },
                 { icon: "droplet" as IconName, value: heroStat2Value, label: heroStat2Label },
               ].map((s, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 13, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.22)", backdropFilter: "blur(4px)", borderRadius: 18, padding: "13px 18px 13px 14px" }}>
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 13, background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.22)", borderRadius: 18, padding: "13px 18px 13px 14px" }}>
                   <IconBadge name={s.icon} box={44} size={22} bg="rgba(255,210,122,0.22)" color={C.gold} />
                   <div>
                     <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 26, lineHeight: 1, color: "#ffd27a" }}>{s.value}</div>
@@ -575,7 +585,7 @@ export default function Home() {
           {heroPhotos.length > 0 ? (
           <div className="as-hero-bubble">
             <div className="as-hero-stack">
-              <div aria-hidden style={{ position: "absolute", inset: "-8%", borderRadius: "50%", background: "radial-gradient(circle at 50% 50%, rgba(255,210,122,0.4), rgba(108,180,224,0.18) 55%, transparent 72%)", filter: "blur(10px)", animation: "asglow 7s ease-in-out infinite" }} />
+              <div aria-hidden style={{ position: "absolute", inset: "-8%", borderRadius: "50%", background: "radial-gradient(circle at 50% 50%, rgba(255,210,122,0.4), rgba(108,180,224,0.18) 55%, transparent 72%)", willChange: "transform, opacity", animation: "asglow 7s ease-in-out infinite" }} />
               {heroPhotos.map((p, i) => {
                 const pos: React.CSSProperties[] = [
                   { left: "0%", top: "10%", width: "58%", height: "60%", animation: "as-card-float1 9s ease-in-out infinite", zIndex: 2 },
@@ -591,7 +601,7 @@ export default function Home() {
               })}
               {/* Logo w szklistym bąblu wody — nachodzi na zdjęcia */}
               <div className="as-hero-logo" style={{ position: "absolute", left: "-7%", bottom: "-5%", zIndex: 4, width: "44%", aspectRatio: "1", animation: "asfloat 7s ease-in-out infinite" }}>
-                <div aria-hidden style={{ position: "absolute", inset: "-10%", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.45), rgba(143,211,246,0.2) 55%, transparent 72%)", filter: "blur(6px)", animation: "asglow 6s ease-in-out infinite" }} />
+                <div aria-hidden style={{ position: "absolute", inset: "-10%", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.45), rgba(143,211,246,0.2) 55%, transparent 72%)", willChange: "transform, opacity", animation: "asglow 6s ease-in-out infinite" }} />
                 <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "radial-gradient(circle at 36% 30%, #ffffff 0%, #ffffff 62%, #eaf6fd 82%, #c7e5f7 100%)", boxShadow: "0 26px 56px rgba(6,40,70,0.45), inset -14px -18px 36px rgba(108,180,224,0.35), inset 12px 14px 30px rgba(255,255,255,0.9)", border: "1px solid rgba(255,255,255,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/logo.png" alt="ALL SWIM" style={{ width: "64%", height: "auto", display: "block" }} />
@@ -611,7 +621,7 @@ export default function Home() {
           </div>
           ) : (
           <div className="as-hero-bubble" style={{ position: "relative", width: "min(420px,90vw)", aspectRatio: "1", margin: "0 auto" }}>
-            <div style={{ position: "absolute", inset: "-6%", borderRadius: "50%", background: "radial-gradient(circle at 50% 45%, rgba(255,210,122,0.45), rgba(108,180,224,0.25) 55%, transparent 72%)", filter: "blur(8px)", animation: "asglow 6s ease-in-out infinite" }} />
+            <div style={{ position: "absolute", inset: "-6%", borderRadius: "50%", background: "radial-gradient(circle at 50% 45%, rgba(255,210,122,0.45), rgba(108,180,224,0.25) 55%, transparent 72%)", willChange: "transform, opacity", animation: "asglow 6s ease-in-out infinite" }} />
             <div style={{ position: "absolute", top: "6%", left: "2%", width: 46, height: 46, borderRadius: "50%", background: "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.9), rgba(168,212,239,0.5) 60%, rgba(108,180,224,0.25))", boxShadow: "inset -4px -6px 10px rgba(13,82,134,0.25)", animation: "asorbit 7s ease-in-out infinite" }} />
             <div style={{ position: "absolute", bottom: "8%", right: "0%", width: 34, height: 34, borderRadius: "50%", background: "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.9), rgba(168,212,239,0.5) 60%, rgba(108,180,224,0.25))", boxShadow: "inset -3px -5px 8px rgba(13,82,134,0.25)", animation: "asorbit 5.5s ease-in-out infinite 0.6s" }} />
             <div style={{ position: "absolute", top: "14%", right: "8%", width: 20, height: 20, borderRadius: "50%", background: "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.95), rgba(255,210,122,0.5) 70%)", animation: "asorbit 6.2s ease-in-out infinite 1.1s" }} />
