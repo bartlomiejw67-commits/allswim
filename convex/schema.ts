@@ -210,6 +210,13 @@ export default defineSchema({
     recruitmentOpensAt: v.optional(v.number()),
     recruitmentClosesAt: v.optional(v.number()),
     recruitmentInfo: v.optional(v.string()),
+    // Okienko naboru pod sekcją powitalną: ukryte (trwa sezon) / „Nabór wkrótce” / „Trwa nabór”.
+    // Brak = jak dawniej (otwarty → „Trwa nabór”, zamknięty → zapowiedź z „Powiadom mnie”).
+    recruitmentMode: v.optional(v.union(v.literal("hidden"), v.literal("soon"), v.literal("open"))),
+    recruitmentTitle: v.optional(v.string()),
+    recruitmentSoonTitle: v.optional(v.string()),
+    recruitmentSoonText: v.optional(v.string()),
+    recruitmentClosedText: v.optional(v.string()),
     // Czy grafik (siatka grup i godzin) jest widoczny publicznie i dla rodziców.
     // Ustawiany na true przy pierwszej publikacji zmian.
     scheduleLive: v.optional(v.boolean()),

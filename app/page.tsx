@@ -220,8 +220,14 @@ export default function Home() {
   const submitEnroll = useMutation(api.enrollments.submit);
   const joinWaitlist = useMutation(api.waitlist.join);
 
-  const naborActive = settings?.recruitmentOpen ?? true;
+  const formOpen = settings?.recruitmentOpen ?? true; // czy formularz przyjmuje zgłoszenia
+  const naborMode = settings?.recruitmentMode ?? (formOpen ? "open" : "soon");
+  const naborActive = naborMode === "open";
+  const naborTitle = settings?.recruitmentTitle || "Trwa nabór!";
   const naborInfo = settings?.recruitmentInfo || "Wolne miejsca w grupach początkujących i średnich · zapisy do 15 września";
+  const soonTitle = settings?.recruitmentSoonTitle || "Nabór wkrótce";
+  const soonText = settings?.recruitmentSoonText || "Zapisy na nowy sezon ruszą w wakacje. Zostaw e-mail — damy znać, gdy wystartujemy.";
+  const closedText = settings?.recruitmentClosedText || "Trwa sezon zajęć. Chcesz dołączyć w jego trakcie? Zadzwoń lub napisz — sprawdzimy wolne miejsca.";
   const contactEmail = settings?.contactEmail || "kontakt@allswim.pl";
   const contactPhone = settings?.contactPhone || "+48 600 100 200";
   const contactAddress = settings?.contactAddress || "Tczew · Basen CSiR i Pływalnia miejska";
@@ -637,6 +643,7 @@ export default function Home() {
 
 
       {/* ============ NABÓR BANNER ============ */}
+      {naborMode !== "hidden" && (
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "0 22px" }}>
         <div className="as-reveal" style={{ marginTop: 44 }}>
           {naborActive ? (
@@ -644,7 +651,7 @@ export default function Home() {
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 <IconBadge name="megaphone" box={52} size={27} radius={16} bg="rgba(255,255,255,0.3)" color="#fff" />
                 <div>
-                  <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 24, color: "#fff" }}>Trwa nabór!</div>
+                  <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 24, color: "#fff" }}>{naborTitle}</div>
                   <div style={{ fontSize: 15, color: "#5a3a06", fontWeight: 700 }}>{naborInfo}</div>
                 </div>
               </div>
@@ -655,10 +662,10 @@ export default function Home() {
           ) : (
             <div className="as-glass" style={{ position: "relative", zIndex: 3, borderRadius: 26, padding: "24px 28px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 18, justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <IconBadge name="hourglass" box={52} size={26} radius={16} bg="#eef3f6" color={C.navy} />
+                <IconBadge name="calendar" box={52} size={26} radius={16} bg="#fff1d9" color={C.orange} />
                 <div>
-                  <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 24, color: C.grey }}>Nabór jest obecnie zamknięty</div>
-                  <div style={{ fontSize: 15, color: C.grey }}>Zapisz się na listę powiadomień — damy znać, gdy ruszą kolejne zapisy.</div>
+                  <div className="font-fredoka" style={{ fontWeight: 700, fontSize: 24, color: C.navy }}>{soonTitle}</div>
+                  <div style={{ fontSize: 15, color: C.grey, lineHeight: 1.5, whiteSpace: "pre-line" }}>{soonText}</div>
                 </div>
               </div>
               {waitSent ? (
@@ -683,6 +690,7 @@ export default function Home() {
           )}
         </div>
       </section>
+      )}
 
       {/* ============ O MNIE ============ */}
       <section id="onas" style={{ maxWidth: 1120, margin: "0 auto", padding: "78px 22px 20px" }}>
@@ -1138,7 +1146,26 @@ export default function Home() {
           </div>
 
           <div className="as-form2-body">
-            {!sent ? (
+            {!formOpen ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", minHeight: 320, gap: 14 }}>
+                <div style={{ width: 76, height: 76, borderRadius: "50%", background: "#fff1d9", color: C.orange, display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name={naborMode === "soon" ? "calendar" : "waves"} size={36} stroke={2} /></div>
+                <div className="font-fredoka" style={{ fontWeight: 600, fontSize: 26, color: C.navy }}>{naborMode === "soon" ? soonTitle : "Zapisy są teraz zamknięte"}</div>
+                <p style={{ fontSize: 16, color: C.grey, maxWidth: 380, lineHeight: 1.55, margin: 0, whiteSpace: "pre-line" }}>{naborMode === "soon" ? soonText : closedText}</p>
+                {waitSent ? (
+                  <div className="font-fredoka" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 700, fontSize: 15, color: "#1f8a5b", background: "#e8f7ee", borderRadius: 999, padding: "11px 20px" }}><Icon name="check" size={17} stroke={2.4} /> Dzięki! Damy znać mailowo.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%", maxWidth: 380, marginTop: 4 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: C.navy }}>Powiadomić Cię o starcie zapisów?</span>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", width: "100%" }}>
+                      <input type="email" value={waitEmail} onChange={(e) => setWaitEmail(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleWaitlist(); }} placeholder="Twój e-mail" aria-label="Twój e-mail" className="as-form2-input" style={{ flex: "1 1 200px" }} />
+                      <button onClick={handleWaitlist} disabled={waitBusy} className="font-fredoka" style={{ fontWeight: 600, fontSize: 16, color: "#fff", background: C.orange, border: "none", borderRadius: 12, padding: "12px 22px", cursor: waitBusy ? "default" : "pointer" }}>
+                        {waitBusy ? "Zapisywanie…" : "Powiadom mnie"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : !sent ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 <div className="as-step"><span className="as-step-n">1</span><span className="as-step-t">O dziecku</span><span className="as-step-line" /></div>
                 <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.7fr) minmax(0,1fr)", gap: 12 }}>

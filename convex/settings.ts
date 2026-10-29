@@ -138,6 +138,11 @@ export const update = mutation({
     recruitmentOpensAt: v.optional(v.number()),
     recruitmentClosesAt: v.optional(v.number()),
     recruitmentInfo: v.optional(v.string()),
+    recruitmentMode: v.optional(v.union(v.literal("hidden"), v.literal("soon"), v.literal("open"))),
+    recruitmentTitle: v.optional(v.string()),
+    recruitmentSoonTitle: v.optional(v.string()),
+    recruitmentSoonText: v.optional(v.string()),
+    recruitmentClosedText: v.optional(v.string()),
     scheduleLive: v.optional(v.boolean()),
     heroEyebrow: v.optional(v.string()),
     heroLine1: v.optional(v.string()),
@@ -196,6 +201,10 @@ export const update = mutation({
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
     const existing = (await ctx.db.query("siteSettings").take(1))[0];
+    // Tryb okienka wyznacza formularz: „Trwa nabór” = otwarty, „Nabór wkrótce” = zamknięty.
+    // Przy trybie ukrytym o formularzu decyduje osobny przełącznik (zapisy w trakcie sezonu).
+    if (args.recruitmentMode === "open") args.recruitmentOpen = true;
+    if (args.recruitmentMode === "soon") args.recruitmentOpen = false;
     const wasOpen = existing?.recruitmentOpen ?? false;
     const willOpen = args.recruitmentOpen ?? wasOpen;
 

@@ -9,10 +9,17 @@ import { compressImage } from "@/components/imageCompress";
 import Link from "next/link";
 import { Icon } from "@/components/Icons";
 import { Switch, SectionTabs, SaveBar, Fld, Section, Grid2 } from "@/components/admin/Controls";
+import Hint from "@/components/admin/Hint";
+import { NaborPreview, MODES, DEF, type NaborMode } from "@/components/admin/NaborPreview";
 
 type Form = {
+  recruitmentMode: NaborMode;
   recruitmentOpen: boolean;
+  recruitmentTitle: string;
   recruitmentInfo: string;
+  recruitmentSoonTitle: string;
+  recruitmentSoonText: string;
+  recruitmentClosedText: string;
   heroEyebrow: string;
   heroLine1: string;
   heroLine2: string;
@@ -58,8 +65,13 @@ type Form = {
 };
 
 const EMPTY: Form = {
+  recruitmentMode: "soon",
   recruitmentOpen: false,
+  recruitmentTitle: "",
   recruitmentInfo: "",
+  recruitmentSoonTitle: "",
+  recruitmentSoonText: "",
+  recruitmentClosedText: "",
   heroEyebrow: "",
   heroLine1: "",
   heroLine2: "",
@@ -143,6 +155,8 @@ export default function AdminSettings() {
   const removeImage = useMutation(api.images.remove);
   const [form, setForm] = useState<Form>(EMPTY);
   const [initial, setInitial] = useState<Form>(EMPTY);
+  const waitlist = useQuery(api.waitlist.list);
+  const waitingCount = (waitlist ?? []).filter((w) => !w.notified).length;
   const [tab, setTab] = useState<"nabor" | "glowna" | "formularz" | "cennik" | "kontakt">("nabor");
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -173,8 +187,13 @@ export default function AdminSettings() {
   useEffect(() => {
     if (settings !== undefined && !loaded) {
       const f: Form = {
+        recruitmentMode: settings?.recruitmentMode ?? (settings?.recruitmentOpen ? "open" : "soon"),
         recruitmentOpen: settings?.recruitmentOpen ?? false,
+        recruitmentTitle: settings?.recruitmentTitle ?? "",
         recruitmentInfo: settings?.recruitmentInfo ?? "",
+        recruitmentSoonTitle: settings?.recruitmentSoonTitle ?? "",
+        recruitmentSoonText: settings?.recruitmentSoonText ?? "",
+        recruitmentClosedText: settings?.recruitmentClosedText ?? "",
         heroEyebrow: settings?.heroEyebrow ?? "",
         heroLine1: settings?.heroLine1 ?? "",
         heroLine2: settings?.heroLine2 ?? "",
@@ -224,6 +243,13 @@ export default function AdminSettings() {
     }
   }, [settings, loaded]);
 
+  // Tryb okienka ustawia też formularz: „Trwa nabór” = otwarty, „Nabór wkrótce” = zamknięty,
+  // „Ukryte” = zamknięty (można włączyć przełącznikiem zapisy w trakcie sezonu).
+  function setMode(m: NaborMode) {
+    setForm((f) => ({ ...f, recruitmentMode: m, recruitmentOpen: m === "open" }));
+    setSaved(false);
+  }
+
   function set<K extends keyof Form>(k: K, v: Form[K]) {
     setForm((f) => ({ ...f, [k]: v }));
     setSaved(false);
@@ -233,6 +259,8 @@ export default function AdminSettings() {
   const dirty = loaded && JSON.stringify(form) !== JSON.stringify(initial);
 
   async function save() {
+    const opening = form.recruitmentOpen && !initial.recruitmentOpen;
+    if (opening && waitingCount > 0 && !confirm(`Otwierasz zapisy. Osoby z listy oczekujących (${waitingCount}) dostaną teraz maila, że nabór ruszył. Zapisać?`)) return;
     setSaving(true);
     try {
       await update(form);
@@ -271,9 +299,60 @@ export default function AdminSettings() {
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {tab === "nabor" && (
           <>
-            <Section title="Nabór na zajęcia" description="Gdy nabór jest włączony, na stronie działa formularz zgłoszeń i baner „Trwa nabór”. Po włączeniu i zapisaniu osoby z listy oczekujących dostaną maila.">
-              <Switch checked={form.recruitmentOpen} onChange={(v) => set("recruitmentOpen", v)} title="Nabór otwarty" description="Formularz aktywny i baner „Trwa nabór” na stronie. Zmiana zacznie działać po zapisaniu." />
-              <Fld label="Treść banera naboru" rows={2} value={form.recruitmentInfo} onChange={(v) => set("recruitmentInfo", v)} placeholder="np. Wolne miejsca w grupach początkujących · zapisy do 15 września" />
+            <Hint id="nabor-tryb">
+              <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 5 }}>
+                <li><strong>W trakcie sezonu</strong> wybierz „Ukryte” — okienko znika ze strony głównej.</li>
+                <li><strong>Przed nowym sezonem</strong> (np. w czerwcu) wybierz „Nabór wkrótce” i wpisz, kiedy ruszają zapisy. Rodzice mogą zostawić e-mail.</li>
+                <li><strong>Start zapisów</strong>: „Trwa nabór” — formularz zaczyna przyjmować zgłoszenia, a osoby z listy oczekujących dostają maila.</li>
+                <li>Zmiana działa po kliknięciu <strong>Zapisz zmiany</strong> na dole ekranu. Puste pola = tekst domyślny (widać go w podglądzie).</li>
+              </ul>
+            </Hint>
+            <Section title="Okienko naboru na stronie głównej" description="Wybierz, co widzą rodzice pod sekcją powitalną.">
+              <div className="adm-mode-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
+                {MODES.map((m) => {
+                  const on = form.recruitmentMode === m.key;
+                  return (
+                    <button key={m.key} type="button" role="radio" aria-checked={on} onClick={() => setMode(m.key)} style={{ textAlign: "left", cursor: "pointer", fontFamily: "inherit", background: on ? m.bg : "#f6f9fb", border: `2px solid ${on ? m.color : A.line}`, borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: 9, fontWeight: 700, fontSize: 15.5, color: on ? m.color : A.text }}>
+                        <span aria-hidden style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${on ? m.color : "#b9c8d3"}`, display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
+                          {on && <span style={{ width: 8, height: 8, borderRadius: "50%", background: m.color }} />}
+                        </span>
+                        {m.label}
+                      </span>
+                      <span style={{ fontSize: 13, color: A.grey, lineHeight: 1.45 }}>{m.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {form.recruitmentMode === "open" && (
+                <>
+                  <Fld label="Nagłówek" value={form.recruitmentTitle} onChange={(v) => set("recruitmentTitle", v)} placeholder={DEF.openTitle} />
+                  <Fld label="Treść" rows={2} value={form.recruitmentInfo} onChange={(v) => set("recruitmentInfo", v)} placeholder="np. Wolne miejsca w grupach początkujących · zapisy do 15 września" />
+                </>
+              )}
+              {form.recruitmentMode === "soon" && (
+                <>
+                  <Fld label="Nagłówek" value={form.recruitmentSoonTitle} onChange={(v) => set("recruitmentSoonTitle", v)} placeholder={DEF.soonTitle} />
+                  <Fld label="Treść" hint="Napisz, kiedy ruszają zapisy — np. „Start rekrutacji na sezon 2027/2028: 1 lipca”." rows={3} value={form.recruitmentSoonText} onChange={(v) => set("recruitmentSoonText", v)} placeholder={DEF.soonText} />
+                </>
+              )}
+              {form.recruitmentMode === "hidden" && (
+                <>
+                  <Switch checked={form.recruitmentOpen} onChange={(v) => set("recruitmentOpen", v)} title="Przyjmuj zgłoszenia w trakcie sezonu" description="Włączone: formularz na dole strony nadal działa (np. na wolne miejsca), tylko okienka nie widać. Wyłączone: zamiast formularza krótka informacja poniżej." />
+                  {!form.recruitmentOpen && (
+                    <Fld label="Informacja zamiast formularza" rows={2} value={form.recruitmentClosedText} onChange={(v) => set("recruitmentClosedText", v)} placeholder={DEF.closedText} />
+                  )}
+                </>
+              )}
+
+              <NaborPreview form={form} />
+
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, color: form.recruitmentOpen ? "#1f6b47" : "#8a5c00", background: form.recruitmentOpen ? "#e9f6ef" : "#fff4e0", borderRadius: 10, padding: "9px 12px" }}>
+                <Icon name={form.recruitmentOpen ? "check" : "info"} size={16} />
+                {form.recruitmentOpen ? "Formularz zgłoszeń przyjmuje zapisy." : "Formularz zgłoszeń zamknięty — rodzice mogą zostawić e-mail („Powiadom mnie”)."}
+                {form.recruitmentOpen && !initial.recruitmentOpen && waitingCount > 0 && <strong style={{ marginLeft: 4 }}>Po zapisaniu {waitingCount} os. z listy oczekujących dostanie maila.</strong>}
+              </div>
             </Section>
             <WaitlistCard />
           </>
