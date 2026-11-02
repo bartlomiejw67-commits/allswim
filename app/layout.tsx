@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
+import SiteAnalytics from "@/components/SiteAnalytics";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -83,6 +84,7 @@ export default function RootLayout({
       <body>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <ConvexClientProvider>{children}</ConvexClientProvider>
+        <SiteAnalytics />
       </body>
     </html>
   );

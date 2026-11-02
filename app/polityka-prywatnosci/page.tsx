@@ -72,7 +72,13 @@ export default function PrivacyPolicy() {
           <a href={`mailto:${email}`} style={{ color: C.navy, fontWeight: 700 }}>{email}</a>.
         </p>
 
-        <h2 style={h2}>7. Dobrowolność</h2>
+        <h2 style={h2}>7. Statystyki odwiedzin</h2>
+        <p style={p}>
+          Korzystamy z anonimowych statystyk Vercel Web Analytics (liczba odwiedzin, odwiedzane podstrony, rodzaj
+          urządzenia, kraj). Narzędzie nie używa plików cookie i nie pozwala nas zidentyfikować konkretnej osoby.
+        </p>
+
+        <h2 style={h2}>8. Dobrowolność</h2>
         <p style={p}>
           Podanie danych jest dobrowolne, ale niezbędne do rozpatrzenia zgłoszenia i udziału w zajęciach.
         </p>
